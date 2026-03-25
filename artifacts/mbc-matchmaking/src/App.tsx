@@ -159,29 +159,29 @@ export default function App() {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
-        if (firebaseUser.email === SUPER_ADMIN_EMAIL) {
-          setUserRole('superadmin');
-          const userRef = doc(db, 'users', firebaseUser.uid);
-          await setDoc(userRef, { email: firebaseUser.email, role: 'superadmin', displayName: firebaseUser.displayName || '' }, { merge: true });
-          window.history.replaceState({}, '', window.location.pathname);
-          setView('cohortSelection');
-        } else {
-          const userRef = doc(db, 'users', firebaseUser.uid);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            setUserRole(userSnap.data().role || 'preceptor');
+        try {
+          if (firebaseUser.email === SUPER_ADMIN_EMAIL) {
+            setUserRole('superadmin');
+            const userRef = doc(db, 'users', firebaseUser.uid);
+            await setDoc(userRef, { email: firebaseUser.email, role: 'superadmin', displayName: firebaseUser.displayName || '' }, { merge: true });
             window.history.replaceState({}, '', window.location.pathname);
             setView('cohortSelection');
           } else {
-            const params = new URLSearchParams(window.location.search);
-            const inviteToken = params.get('invite');
-            if (!inviteToken) {
-              await signOut(auth);
-              setError('No invite found. You need an invite link to create an account. Please ask your administrator for one.');
-              setAuthLoading(false);
-              return;
-            }
-            try {
+            const userRef = doc(db, 'users', firebaseUser.uid);
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) {
+              setUserRole(userSnap.data().role || 'preceptor');
+              window.history.replaceState({}, '', window.location.pathname);
+              setView('cohortSelection');
+            } else {
+              const params = new URLSearchParams(window.location.search);
+              const inviteToken = params.get('invite');
+              if (!inviteToken) {
+                await signOut(auth);
+                setError('No invite found. You need an invite link to create an account. Please ask your administrator for one.');
+                setAuthLoading(false);
+                return;
+              }
               const inviteRef = doc(db, ...INVITES_PATH, inviteToken);
               const result = await runTransaction(db, async (transaction) => {
                 const inviteSnap = await transaction.get(inviteRef);
@@ -199,13 +199,18 @@ export default function App() {
               setPendingInvite(null);
               window.history.replaceState({}, '', window.location.pathname);
               setView('cohortSelection');
-            } catch (err: any) {
-              await signOut(auth);
-              setError(err.message);
-              setAuthLoading(false);
-              return;
             }
           }
+        } catch (err: any) {
+          const msg = err.message || String(err);
+          if (msg.includes('offline') || msg.includes('unavailable')) {
+            setError('Unable to connect to the database. Please check that Firestore is set up in your Firebase project and try again.');
+          } else {
+            setError(msg);
+          }
+          await signOut(auth);
+          setAuthLoading(false);
+          return;
         }
       } else {
         setUserRole(null);
