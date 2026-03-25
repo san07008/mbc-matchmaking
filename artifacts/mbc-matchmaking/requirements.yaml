@@ -1,0 +1,17 @@
+packages:
+  "framer-motion": "For smooth page transitions and scroll-triggered reveals to make the landing page feel premium."
+  "lucide-react": "For beautiful, consistent iconography across the landing page."
+  "clsx": "For conditional class name merging."
+  "tailwind-merge": "For merging tailwind classes safely."
+
+images:
+  - path: "artifacts/mbc-matchmaking/public/images/hero-abstract.png"
+    description: "Elegant modern abstract 3D illustration representing human connection and matchmaking. Soft overlapping organic shapes or spheres in warm terracotta, soft peach, and cream colors. Soft premium lighting, professional corporate style, clean minimal background."
+    aspect_ratio: "16:9"
+  - path: "artifacts/mbc-matchmaking/public/images/logo-mark.png"
+    description: "Minimalist, luxury corporate logo mark for a matchmaking service called 'MBC'. Abstract geometric design showing two elements joining together seamlessly. Warm terracotta gradient, flat vector style, transparent background."
+    aspect_ratio: "1:1"
+
+notes:
+  - Landing page only as per requirements. No backend API integration implemented yet.
+  - Buttons trigger interactive states (modals/toasts) to simulate functionality.
