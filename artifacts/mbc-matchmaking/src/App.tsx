@@ -2,7 +2,7 @@ import React, { useState, useEffect, createContext, useContext } from 'react';
 import {
   Download, AlertCircle, Calendar, Check, Users,
   Send, User, Clock, ArrowLeft, ShieldAlert, Star, CalendarPlus, Link as LinkIcon, Plus, X, Building,
-  GraduationCap, Briefcase, Settings, Globe, Rocket, LogOut, Shield, Eye, EyeOff
+  GraduationCap, Briefcase, Settings, Globe, Rocket, LogOut, Shield, Eye, EyeOff, Copy, Mail, UserPlus, Trash2
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import {
@@ -12,7 +12,7 @@ import {
 } from 'firebase/auth';
 import {
   getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp,
-  doc, updateDoc, getDocs, where, setDoc, deleteDoc, getDoc
+  doc, updateDoc, getDocs, where, setDoc, deleteDoc, getDoc, runTransaction
 } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -31,6 +31,21 @@ const googleProvider = new GoogleAuthProvider();
 
 const SUPER_ADMIN_EMAIL = import.meta.env.VITE_SUPER_ADMIN_EMAIL || 'superadmin@example.com';
 const APP_ID = 'mbc-matchmaking';
+
+const INVITES_PATH = ['artifacts', APP_ID, 'public', 'data', 'invites'] as const;
+
+const generateInviteToken = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const randomBytes = new Uint8Array(32);
+  crypto.getRandomValues(randomBytes);
+  let token = '';
+  for (let i = 0; i < 32; i++) token += chars.charAt(randomBytes[i] % chars.length);
+  return token;
+};
+
+const getBaseUrl = () => {
+  return window.location.origin + window.location.pathname;
+};
 
 const AppContext = createContext<any>(null);
 
@@ -125,6 +140,20 @@ export default function App() {
   const [currentCohortId, setCurrentCohortId] = useState<string | null>(null);
   const [currentCohortSettings, setCurrentCohortSettings] = useState<any>(null);
   const [cohorts, setCohorts] = useState<any[]>([]);
+  const [pendingInvite, setPendingInvite] = useState<any>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const inviteToken = params.get('invite');
+    if (inviteToken) {
+      const inviteRef = doc(db, ...INVITES_PATH, inviteToken);
+      getDoc(inviteRef).then((snap) => {
+        if (snap.exists() && !snap.data().used) {
+          setPendingInvite({ id: snap.id, ...snap.data() });
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -134,17 +163,50 @@ export default function App() {
           setUserRole('superadmin');
           const userRef = doc(db, 'users', firebaseUser.uid);
           await setDoc(userRef, { email: firebaseUser.email, role: 'superadmin', displayName: firebaseUser.displayName || '' }, { merge: true });
+          window.history.replaceState({}, '', window.location.pathname);
+          setView('cohortSelection');
         } else {
           const userRef = doc(db, 'users', firebaseUser.uid);
           const userSnap = await getDoc(userRef);
           if (userSnap.exists()) {
             setUserRole(userSnap.data().role || 'preceptor');
+            window.history.replaceState({}, '', window.location.pathname);
+            setView('cohortSelection');
           } else {
-            await setDoc(userRef, { email: firebaseUser.email, role: 'preceptor', displayName: firebaseUser.displayName || '' }, { merge: true });
-            setUserRole('preceptor');
+            const params = new URLSearchParams(window.location.search);
+            const inviteToken = params.get('invite');
+            if (!inviteToken) {
+              await signOut(auth);
+              setError('No invite found. You need an invite link to create an account. Please ask your administrator for one.');
+              setAuthLoading(false);
+              return;
+            }
+            try {
+              const inviteRef = doc(db, ...INVITES_PATH, inviteToken);
+              const result = await runTransaction(db, async (transaction) => {
+                const inviteSnap = await transaction.get(inviteRef);
+                if (!inviteSnap.exists()) throw new Error('This invite link is invalid.');
+                if (inviteSnap.data().used) throw new Error('This invite link has already been used.');
+                const inviteData = inviteSnap.data();
+                transaction.update(inviteRef, { used: true, usedBy: firebaseUser.email, usedAt: serverTimestamp() });
+                transaction.set(userRef, { email: firebaseUser.email, role: inviteData.role, displayName: firebaseUser.displayName || '' });
+                return { role: inviteData.role, cohortId: inviteData.cohortId || null };
+              });
+              setUserRole(result.role);
+              if (result.cohortId) {
+                setCurrentCohortId(result.cohortId);
+              }
+              setPendingInvite(null);
+              window.history.replaceState({}, '', window.location.pathname);
+              setView('cohortSelection');
+            } catch (err: any) {
+              await signOut(auth);
+              setError(err.message);
+              setAuthLoading(false);
+              return;
+            }
           }
         }
-        setView('cohortSelection');
       } else {
         setUserRole(null);
         setView('login');
@@ -213,7 +275,7 @@ export default function App() {
     <AppContext.Provider value={{
       user, userRole, error, setError, setView, db,
       currentCohortId, setCurrentCohortId, currentCohortSettings,
-      cohorts, surveyDays, SURVEY_TIMES, handleSignOut
+      cohorts, surveyDays, SURVEY_TIMES, handleSignOut, pendingInvite
     }}>
       <div className="min-h-screen bg-slate-900 text-slate-300 font-sans pb-20">
         {view !== 'login' && (
@@ -279,19 +341,19 @@ export default function App() {
 }
 
 function LoginPage() {
-  const { setError } = useContext(AppContext);
-  const [isSignUp, setIsSignUp] = useState(false);
+  const { setError, pendingInvite } = useContext(AppContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const isInvite = !!pendingInvite;
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      if (isSignUp) {
+      if (isInvite) {
         await createUserWithEmailAndPassword(auth, email, password);
       } else {
         await signInWithEmailAndPassword(auth, email, password);
@@ -321,7 +383,20 @@ function LoginPage() {
         <div className="text-center mb-8">
           <Rocket className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-4xl font-extrabold text-white">MBC Matchmaking</h1>
-          <p className="text-slate-400 mt-2">Sign in to access the platform</p>
+          {isInvite ? (
+            <div className="mt-3">
+              <div className="inline-flex items-center px-4 py-2 bg-emerald-600/20 border border-emerald-500/30 rounded-full">
+                <UserPlus className="w-4 h-4 text-emerald-400 mr-2" />
+                <span className="text-emerald-300 text-sm font-semibold">
+                  You've been invited as {pendingInvite.role === 'admin' ? 'an Admin' : 'a Preceptor'}
+                  {pendingInvite.cohortName ? ` for ${pendingInvite.cohortName}` : ''}
+                </span>
+              </div>
+              <p className="text-slate-400 mt-2">Create your account to get started</p>
+            </div>
+          ) : (
+            <p className="text-slate-400 mt-2">Sign in to access the platform</p>
+          )}
         </div>
         <div className="bg-slate-800 rounded-2xl border border-slate-700 p-8 shadow-2xl">
           <button
@@ -335,7 +410,7 @@ function LoginPage() {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            Continue with Google
+            {isInvite ? 'Sign up with Google' : 'Continue with Google'}
           </button>
           <div className="flex items-center mb-6">
             <div className="flex-1 border-t border-slate-600"></div>
@@ -354,23 +429,22 @@ function LoginPage() {
               <div className="relative">
                 <input type={showPassword ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 pr-12 text-white outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="••••••••" />
+                  placeholder={isInvite ? 'Create a password (min 6 chars)' : '••••••••'} />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3.5 text-slate-400 hover:text-white">
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
             <button type="submit" disabled={loading}
-              className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg transition-colors shadow-lg shadow-red-500/20 disabled:opacity-50">
-              {loading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}
+              className={`w-full py-3 ${isInvite ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20' : 'bg-red-600 hover:bg-red-500 shadow-red-500/20'} text-white font-bold rounded-lg transition-colors shadow-lg disabled:opacity-50`}>
+              {loading ? 'Please wait...' : isInvite ? 'Create Account' : 'Sign In'}
             </button>
           </form>
-          <p className="text-center text-slate-500 text-sm mt-6">
-            {isSignUp ? 'Already have an account?' : 'New to the platform?'}
-            <button onClick={() => setIsSignUp(!isSignUp)} className="ml-2 text-indigo-400 hover:text-indigo-300 font-semibold">
-              {isSignUp ? 'Sign In' : 'Create Account'}
-            </button>
-          </p>
+          {!isInvite && (
+            <p className="text-center text-slate-500 text-sm mt-6">
+              Need an account? Ask your admin for an invite link.
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -476,6 +550,8 @@ function SuperAdminView() {
   const [users, setUsers] = useState<any[]>([]);
   const [searchEmail, setSearchEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [invites, setInvites] = useState<any[]>([]);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     const q = query(collection(db, 'users'));
@@ -533,6 +609,51 @@ function SuperAdminView() {
     } catch (err: any) {
       setError(err.message);
     }
+  };
+
+  useEffect(() => {
+    const q = query(collection(db, ...INVITES_PATH));
+    const unsub = onSnapshot(q, (snap: any) => {
+      const fetched = snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+      fetched.sort((a: any, b: any) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      setInvites(fetched);
+    });
+    return () => unsub();
+  }, [db]);
+
+  const handleCreateInvite = async (role: string, cohortId?: string, cohortName?: string) => {
+    const token = generateInviteToken();
+    try {
+      await setDoc(doc(db, ...INVITES_PATH, token), {
+        role,
+        cohortId: cohortId || null,
+        cohortName: cohortName || null,
+        used: false,
+        createdAt: serverTimestamp(),
+        createdBy: 'superadmin',
+      });
+      const link = `${getBaseUrl()}?invite=${token}`;
+      await navigator.clipboard.writeText(link);
+      setCopiedId(token);
+      setTimeout(() => setCopiedId(null), 3000);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleDeleteInvite = async (inviteId: string) => {
+    try {
+      await deleteDoc(doc(db, ...INVITES_PATH, inviteId));
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const copyInviteLink = async (token: string) => {
+    const link = `${getBaseUrl()}?invite=${token}`;
+    await navigator.clipboard.writeText(link);
+    setCopiedId(token);
+    setTimeout(() => setCopiedId(null), 3000);
   };
 
   const filteredUsers = users.filter(u =>
@@ -606,6 +727,59 @@ function SuperAdminView() {
                 <option value="admin">Admin</option>
                 <option value="superadmin">Super Admin</option>
               </select>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 shadow-2xl">
+        <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+          <Mail className="w-6 h-6 mr-3 text-indigo-400" /> Invite Management
+        </h2>
+        <div className="flex flex-wrap gap-3 mb-8">
+          <button onClick={() => handleCreateInvite('admin')}
+            className="flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-500 transition-colors">
+            <UserPlus className="w-4 h-4 mr-2" /> Generate Admin Invite Link
+          </button>
+          {cohorts.map((c: any) => (
+            <button key={c.id} onClick={() => handleCreateInvite('preceptor', c.id, c.name)}
+              className="flex items-center px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-500 transition-colors">
+              <UserPlus className="w-4 h-4 mr-2" /> Invite Preceptor to {c.name}
+            </button>
+          ))}
+        </div>
+        <p className="text-slate-400 text-sm mb-4">
+          Click a button above to generate a one-time invite link (automatically copied to clipboard). Share the link with the person you want to invite.
+        </p>
+        <div className="space-y-3 max-h-[40vh] overflow-y-auto custom-scrollbar">
+          {invites.length === 0 && <p className="text-slate-500 italic text-sm">No invites generated yet.</p>}
+          {invites.map((inv: any) => (
+            <div key={inv.id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-4 flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center space-x-2">
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${inv.role === 'admin' ? 'bg-indigo-600/30 text-indigo-300' : 'bg-emerald-600/30 text-emerald-300'}`}>
+                    {inv.role}
+                  </span>
+                  {inv.cohortName && <span className="text-slate-400 text-xs">{inv.cohortName}</span>}
+                  {inv.used ? (
+                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-600/30 text-slate-400">Used by {inv.usedBy}</span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-600/30 text-yellow-300">Pending</span>
+                  )}
+                </div>
+                <p className="text-slate-500 text-xs mt-1 truncate">Token: {inv.id}</p>
+              </div>
+              <div className="flex items-center space-x-2 ml-4">
+                {!inv.used && (
+                  <button onClick={() => copyInviteLink(inv.id)}
+                    className="flex items-center px-3 py-1.5 bg-slate-700 text-white text-xs font-bold rounded-lg hover:bg-slate-600 transition-colors">
+                    {copiedId === inv.id ? <><Check className="w-3 h-3 mr-1" /> Copied!</> : <><Copy className="w-3 h-3 mr-1" /> Copy Link</>}
+                  </button>
+                )}
+                <button onClick={() => handleDeleteInvite(inv.id)} className="text-slate-400 hover:text-red-400 p-1">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -771,6 +945,28 @@ function AdminView() {
   const [startupModal, setStartupModal] = useState<any>(null);
   const [zoomModal, setZoomModal] = useState<any>(null);
   const [profileCard, setProfileCard] = useState<any>(null);
+  const [inviteCopied, setInviteCopied] = useState(false);
+
+  const handleInvitePreceptor = async () => {
+    if (!currentCohortId || !currentCohortSettings) return;
+    const token = generateInviteToken();
+    try {
+      await setDoc(doc(db, ...INVITES_PATH, token), {
+        role: 'preceptor',
+        cohortId: currentCohortId,
+        cohortName: currentCohortSettings.name,
+        used: false,
+        createdAt: serverTimestamp(),
+        createdBy: 'admin',
+      });
+      const link = `${getBaseUrl()}?invite=${token}`;
+      await navigator.clipboard.writeText(link);
+      setInviteCopied(true);
+      setTimeout(() => setInviteCopied(false), 3000);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
 
   useEffect(() => {
     if (!currentCohortId) return;
@@ -882,6 +1078,10 @@ function AdminView() {
           <p className="text-slate-400">{currentCohortSettings.name} — {submissions.length} preceptors submitted</p>
         </div>
         <div className="flex space-x-3">
+          <button onClick={handleInvitePreceptor}
+            className="flex items-center px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-500 transition-colors">
+            {inviteCopied ? <><Check className="w-4 h-4 mr-2" /> Link Copied!</> : <><UserPlus className="w-4 h-4 mr-2" /> Invite Preceptor</>}
+          </button>
           <button onClick={() => setShowStartupManager(!showStartupManager)}
             className="flex items-center px-4 py-2 bg-slate-700 text-white text-sm font-bold rounded-lg hover:bg-slate-600 transition-colors">
             <Building className="w-4 h-4 mr-2" /> Manage Startups

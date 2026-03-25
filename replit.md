@@ -55,9 +55,10 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 
 MBC Matchmaking Platform — a Firebase-powered React + Vite web app for the Master of Business Creation program. Features:
 - Firebase Authentication (email/password + Google sign-in)
-- Firestore database for all data (cohorts, submissions, startups, user roles)
+- Firestore database for all data (cohorts, submissions, startups, user roles, invites)
 - Multiple views: Login, Cohort Selection, Role Selection, Preceptor Survey, Admin Dashboard, Super Admin Panel
 - Role-based access: superadmin, admin, preceptor
+- **Invite system**: No public registration. Super admins generate admin invite links; admins generate preceptor invite links (scoped to a cohort). Invite tokens stored at `artifacts/mbc-matchmaking/public/data/invites/{token}` in Firestore. Each invite is one-time use and auto-assigns the correct role on registration.
 - Preceptor availability scheduling with time slot grid
 - Startup management (CRUD) with profile cards
 - Slot assignments with Zoom link management
