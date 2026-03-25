@@ -51,6 +51,21 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 
 ## Packages
 
+### `artifacts/mbc-matchmaking` (`@workspace/mbc-matchmaking`)
+
+MBC Matchmaking Platform — a Firebase-powered React + Vite web app for the Master of Business Creation program. Features:
+- Firebase Authentication (email/password + Google sign-in)
+- Firestore database for all data (cohorts, submissions, startups, user roles)
+- Multiple views: Login, Cohort Selection, Role Selection, Preceptor Survey, Admin Dashboard, Super Admin Panel
+- Role-based access: superadmin, admin, preceptor
+- Preceptor availability scheduling with time slot grid
+- Startup management (CRUD) with profile cards
+- Slot assignments with Zoom link management
+- ICS calendar file generation for meetings
+- Dark slate theme with Tailwind CSS
+- Super admin email: configured via `VITE_SUPER_ADMIN_EMAIL` env var
+- All Firebase config via `VITE_FIREBASE_*` env vars
+
 ### `artifacts/api-server` (`@workspace/api-server`)
 
 Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` for request and response validation and `@workspace/db` for persistence.
