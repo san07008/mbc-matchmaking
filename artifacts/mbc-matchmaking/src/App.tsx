@@ -457,8 +457,8 @@ function LoginPage() {
       </nav>
 
       <section className="relative overflow-hidden">
-        <DottedWorldMap className="hidden md:block absolute top-1/2 right-0 -translate-y-1/2 translate-x-[10%] w-[65%] max-w-[800px] opacity-60 pointer-events-none select-none" />
-        <div className="relative max-w-6xl mx-auto px-6 pt-20 pb-24 md:pt-28 md:pb-32">
+        <DottedWorldMap className="hidden md:block absolute z-0 top-1/2 right-0 -translate-y-1/2 translate-x-[10%] w-[65%] max-w-[800px] opacity-40 pointer-events-none select-none" />
+        <div className="relative z-10 max-w-6xl mx-auto px-6 pt-20 pb-24 md:pt-28 md:pb-32">
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.05] text-[#1A1A1A] mb-6">
             Connecting Preceptors{' '}
             <br className="hidden sm:block" />
