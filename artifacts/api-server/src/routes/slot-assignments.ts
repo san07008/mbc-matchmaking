@@ -3,7 +3,7 @@ import { db } from "@workspace/db";
 import { slotAssignmentsTable, submissionsTable } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
 import { authMiddleware, requireRole } from "../middleware/auth";
-import { sendEmail, buildAssignmentNotificationEmail, isEmailConfigured } from "../lib/email";
+import { sendEmail, buildAssignmentNotificationEmail, buildICSContent, isEmailConfigured } from "../lib/email";
 
 const router: IRouter = Router();
 
@@ -47,7 +47,7 @@ router.put("/cohorts/:cohortId/slot-assignments", authMiddleware, requireRole("s
 router.post("/cohorts/:cohortId/notify-assignment", authMiddleware, requireRole("superadmin", "admin"), async (req, res) => {
   try {
     const cohortId = parseInt(req.params.cohortId as string);
-    const { preceptorName, day, time, startupName, zoomLink, cohortName } = req.body;
+    const { preceptorName, day, time, startupName, zoomLink, cohortName, weekStartDate, timeIndex } = req.body;
 
     if (!preceptorName || !day || !time || !startupName || !cohortName) {
       res.status(400).json({ error: "Missing required fields" });
@@ -82,8 +82,41 @@ router.post("/cohorts/:cohortId/notify-assignment", authMiddleware, requireRole(
       cohortName,
     });
 
-    const result = await sendEmail(preceptorEmail, subject, html);
-    res.json({ success: result.success, error: result.error });
+    const attachments: Array<{ filename: string; content: string; contentType: string }> = [];
+
+    if (weekStartDate && timeIndex !== undefined) {
+      const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+      const dayIdx = dayNames.indexOf(day);
+      if (dayIdx >= 0) {
+        const [year, month, dayNum] = weekStartDate.split("-").map(Number);
+        const startHour = timeIndex + 9;
+        const startDate = new Date(Date.UTC(year, month - 1, dayNum + dayIdx, startHour, 0, 0));
+        const endDate = new Date(Date.UTC(year, month - 1, dayNum + dayIdx, startHour + 1, 0, 0));
+
+        const icsContent = buildICSContent({
+          title: `MBC Meeting: ${preceptorName} & ${startupName}`,
+          description: `Preceptor-Startup Matching Meeting\nStartup: ${startupName}${zoomLink ? `\nZoom: ${zoomLink}` : ""}`,
+          startTime: startDate,
+          endTime: endDate,
+          location: zoomLink || "",
+        });
+
+        attachments.push({
+          filename: "meeting.ics",
+          content: icsContent,
+          contentType: "text/calendar",
+        });
+      }
+    }
+
+    const result = await sendEmail(preceptorEmail, subject, html, attachments.length > 0 ? attachments : undefined);
+
+    if (!result.success) {
+      res.status(502).json({ error: result.error || "Failed to send email" });
+      return;
+    }
+
+    res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

@@ -1119,6 +1119,7 @@ function AdminView() {
     const notifyKey = `${preceptorName}|${day}|${time}`;
     setNotifyStatus(prev => ({ ...prev, [notifyKey]: 'sending' }));
     try {
+      const tIdx = SURVEY_TIMES.indexOf(time);
       await api(`/cohorts/${currentCohortId}/notify-assignment`, {
         method: 'POST',
         body: JSON.stringify({
@@ -1128,6 +1129,8 @@ function AdminView() {
           startupName: startup.name,
           zoomLink: assignment.zoom || '',
           cohortName: currentCohortSettings.name,
+          weekStartDate: currentCohortSettings.weekStartDate || null,
+          timeIndex: tIdx >= 0 ? tIdx : undefined,
         }),
       });
       setNotifyStatus(prev => ({ ...prev, [notifyKey]: 'sent' }));

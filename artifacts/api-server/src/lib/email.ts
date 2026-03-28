@@ -25,7 +25,12 @@ export function isEmailConfigured(): boolean {
   return transporter !== null;
 }
 
-export async function sendEmail(to: string, subject: string, html: string): Promise<{ success: boolean; error?: string }> {
+export async function sendEmail(
+  to: string,
+  subject: string,
+  html: string,
+  attachments?: Array<{ filename: string; content: string; contentType: string }>
+): Promise<{ success: boolean; error?: string }> {
   if (!transporter) {
     return { success: false, error: "Email service not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASS environment variables." };
   }
@@ -35,6 +40,7 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
       to,
       subject,
       html,
+      attachments,
     });
     logger.info({ to, subject }, "Email sent successfully");
     return { success: true };
@@ -90,6 +96,36 @@ export function buildInviteEmail(params: {
 </html>`;
 
   return { subject, html };
+}
+
+function formatICSDate(date: Date): string {
+  return date.toISOString().replace(/[-:]|\.\d{3}/g, "");
+}
+
+export function buildICSContent(params: {
+  title: string;
+  description: string;
+  startTime: Date;
+  endTime: Date;
+  location?: string;
+}): string {
+  const { title, description, startTime, endTime, location } = params;
+  const uid = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}@mbc-matchmaking`;
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//MBC Matchmaking Platform//EN",
+    "BEGIN:VEVENT",
+    `UID:${uid}`,
+    `DTSTAMP:${formatICSDate(new Date())}`,
+    `DTSTART:${formatICSDate(startTime)}`,
+    `DTEND:${formatICSDate(endTime)}`,
+    `SUMMARY:${title}`,
+    `DESCRIPTION:${description.replace(/\n/g, "\\n")}`,
+    `LOCATION:${location || ""}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
 }
 
 export function buildAssignmentNotificationEmail(params: {
