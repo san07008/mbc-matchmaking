@@ -138,7 +138,7 @@ export function buildAssignmentNotificationEmail(params: {
 }): { subject: string; html: string } {
   const { preceptorName, startupName, day, time, zoomLink, cohortName } = params;
 
-  const subject = `MBC Meeting Assignment: ${startupName} — ${day} at ${time}`;
+  const subject = `PreceptorLink Meeting Assignment: ${startupName} — ${day} at ${time}`;
   const zoomSection = zoomLink
     ? `<tr>
         <td style="color:#94a3b8;padding:8px 16px;font-size:14px;border-bottom:1px solid #334155;">Zoom Link</td>

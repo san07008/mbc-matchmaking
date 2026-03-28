@@ -1322,7 +1322,7 @@ function AdminView() {
     const endDate = new Date(Date.UTC(year, month - 1, dayNum + dayIndex, startHour + 1, 0, 0));
 
     generateICS({
-      title: `MBC Meeting: ${preceptorName}${startup ? ` & ${startup.name}` : ''}`,
+      title: `PreceptorLink Meeting: ${preceptorName}${startup ? ` & ${startup.name}` : ''}`,
       description: `Preceptor-Startup Matching Meeting${startup ? `\nStartup: ${startup.name}` : ''}${assignment.zoom ? `\nZoom: ${assignment.zoom}` : ''}`,
       startTime: startDate,
       endTime: endDate,

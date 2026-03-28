@@ -92,7 +92,7 @@ router.post("/cohorts/:cohortId/notify-assignment", authMiddleware, requireRole(
         const endDate = new Date(Date.UTC(year, month - 1, dayNum + dayIndex, startHour + 1, 0, 0));
 
         const icsContent = buildICSContent({
-          title: `MBC Meeting: ${preceptorName} & ${startupName}`,
+          title: `PreceptorLink Meeting: ${preceptorName} & ${startupName}`,
           description: `Preceptor-Startup Matching Meeting\nStartup: ${startupName}${zoomLink ? `\nZoom: ${zoomLink}` : ""}`,
           startTime: startDate,
           endTime: endDate,
