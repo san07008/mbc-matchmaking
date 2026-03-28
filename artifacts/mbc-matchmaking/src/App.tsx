@@ -329,10 +329,10 @@ function LoginPage() {
 
   if (inviteLoading) {
     return (
-      <div className="min-h-[85vh] bg-white flex flex-col items-center justify-center p-4">
+      <div className="min-h-[85vh] bg-[#F5F4F0] flex flex-col items-center justify-center p-4">
         <div className="flex flex-col items-center space-y-4">
-          <div className="w-12 h-12 border-2 border-black border-t-transparent rounded-full animate-spin" />
-          <p className="text-neutral-500 font-mono text-sm uppercase tracking-wider">Verifying invite...</p>
+          <div className="w-10 h-10 border-2 border-[#E8772E] border-t-transparent rounded-full animate-spin" />
+          <p className="text-[#6B6B6B] text-sm font-medium">Verifying invite...</p>
         </div>
       </div>
     );
@@ -340,29 +340,29 @@ function LoginPage() {
 
   if (inviteError) {
     return (
-      <div className="min-h-[85vh] bg-white flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-lg border border-black p-10">
-          <h1 className="text-3xl font-black text-black tracking-tight mb-6">Invite Link Issue</h1>
-          <div className="border-t border-black pt-6 space-y-3">
+      <div className="min-h-[85vh] bg-[#F5F4F0] flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-lg bg-white rounded-xl p-10 shadow-sm">
+          <h1 className="text-2xl font-bold text-[#1A1A1A] mb-6">Invite Link Issue</h1>
+          <div className="border-t border-[#E8E4DF] pt-6 space-y-3">
             {inviteError.type === 'already_used' ? (
               <>
-                <p className="text-black">This invite link has already been used.</p>
-                <p className="text-neutral-500 text-sm">Each invite link can only be used once. If you already created your account, sign in below. Otherwise, ask your administrator for a new link.</p>
+                <p className="text-[#1A1A1A]">This invite link has already been used.</p>
+                <p className="text-[#6B6B6B] text-sm leading-relaxed">Each invite link can only be used once. If you already created your account, sign in below. Otherwise, ask your administrator for a new link.</p>
               </>
             ) : inviteError.type === 'not_found' ? (
               <>
-                <p className="text-black">This invite link is not valid.</p>
-                <p className="text-neutral-500 text-sm">The link may have been deleted or is incorrect. Please check the link or ask your administrator for a new one.</p>
+                <p className="text-[#1A1A1A]">This invite link is not valid.</p>
+                <p className="text-[#6B6B6B] text-sm leading-relaxed">The link may have been deleted or is incorrect. Please check the link or ask your administrator for a new one.</p>
               </>
             ) : (
               <>
-                <p className="text-black">Something went wrong verifying your invite.</p>
-                <p className="text-neutral-500 text-sm">Please try again or ask your administrator for a new invite link.</p>
+                <p className="text-[#1A1A1A]">Something went wrong verifying your invite.</p>
+                <p className="text-[#6B6B6B] text-sm leading-relaxed">Please try again or ask your administrator for a new invite link.</p>
               </>
             )}
           </div>
           <button onClick={handleDismissInviteError}
-            className="w-full mt-8 py-3 bg-black text-white font-bold text-sm uppercase tracking-wider hover:bg-neutral-800 transition-colors">
+            className="w-full mt-8 py-3 bg-[#E8772E] text-white font-semibold text-sm rounded-lg hover:bg-[#D4691E] transition-colors">
             Go to Sign In
           </button>
         </div>
@@ -386,179 +386,142 @@ function LoginPage() {
     { q: 'Who do I contact if I have issues?', a: 'Reach out to your program administrator. They manage the platform and can help with any account or scheduling questions.' },
   ];
 
-  const stepColors = ['bg-[#0037B1]', 'bg-[#01772c]', 'bg-[#FFDB01]'];
-  const stepTextColors = ['text-white', 'text-white', 'text-black'];
-
   return (
-    <div className="bg-white text-black min-h-screen font-sans">
-      <nav className="border-b border-black">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <span className="text-xl font-black tracking-tight">PreceptorLink</span>
-          </div>
-          <div className="flex items-center space-x-6">
-            <button onClick={() => loginRef.current?.scrollIntoView({ behavior: 'smooth' })}
-              className="px-5 py-2 bg-black text-white text-sm font-bold uppercase tracking-wider hover:bg-neutral-800 transition-colors">
-              Sign In
-            </button>
-          </div>
+    <div className="bg-[#F5F4F0] text-[#1A1A1A] min-h-screen font-sans">
+      <nav className="border-b border-[#E8E4DF]/60">
+        <div className="max-w-6xl mx-auto px-6 py-5 flex justify-between items-center">
+          <span className="text-lg font-bold tracking-tight text-[#1A1A1A]">PreceptorLink</span>
+          <button onClick={() => loginRef.current?.scrollIntoView({ behavior: 'smooth' })}
+            className="px-5 py-2.5 bg-[#E8772E] text-white text-sm font-semibold rounded-lg hover:bg-[#D4691E] transition-colors">
+            Sign In
+          </button>
         </div>
       </nav>
 
-      <div className="border-b border-black">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-[1fr_auto] items-end">
-            <div className="py-16 md:py-24 pr-8">
-              <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.9] mb-8">
-                Connecting<br />Preceptors<br />with Startups<span className="inline-block w-3 h-12 sm:h-16 lg:h-20 bg-[#0037B1] ml-1 align-bottom" />
-              </h1>
-              <p className="text-lg text-neutral-600 max-w-lg leading-relaxed">
-                Streamline your preceptor-startup meeting scheduling. Submit availability, build schedules, and get notified.
-              </p>
-            </div>
-            <div className="hidden md:flex flex-col items-end pb-16 md:pb-24 font-mono text-xs text-neutral-400 uppercase tracking-widest text-right space-y-1">
-              <span>Scheduling</span>
-              <span>Matching</span>
-              <span>Notifications</span>
-            </div>
-          </div>
+      <section className="max-w-6xl mx-auto px-6 pt-20 pb-24 md:pt-28 md:pb-32">
+        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.05] text-[#1A1A1A] mb-6">
+          Connecting Preceptors{' '}
+          <br className="hidden sm:block" />
+          with Startups<span className="inline-block w-2.5 h-10 sm:h-12 lg:h-14 bg-[#E8772E] ml-1.5 align-bottom rounded-sm" />
+        </h1>
+        <p className="text-lg text-[#6B6B6B] max-w-xl leading-relaxed">
+          Streamline your preceptor-startup meeting scheduling. Submit availability, build schedules, and get notified — all in one place.
+        </p>
+        <div className="mt-10">
+          <button onClick={() => loginRef.current?.scrollIntoView({ behavior: 'smooth' })}
+            className="px-8 py-3.5 bg-[#E8772E] text-white font-semibold rounded-lg hover:bg-[#D4691E] transition-colors text-sm">
+            Get Started
+          </button>
         </div>
-      </div>
+      </section>
 
-      <div className="bg-[#0037B1] text-white overflow-hidden">
-        <div className="animate-marquee whitespace-nowrap py-2.5 font-mono text-xs uppercase tracking-widest">
-          <span className="mx-8">// SUBMIT AVAILABILITY</span>
-          <span className="mx-8">// BUILD SCHEDULE</span>
-          <span className="mx-8">// ASSIGN STARTUPS</span>
-          <span className="mx-8">// GET NOTIFIED</span>
-          <span className="mx-8">// EXPORT CSV</span>
-          <span className="mx-8">// PRINT SCHEDULE</span>
-          <span className="mx-8">// CALENDAR INVITES</span>
-          <span className="mx-8">// SUBMIT AVAILABILITY</span>
-          <span className="mx-8">// BUILD SCHEDULE</span>
-          <span className="mx-8">// ASSIGN STARTUPS</span>
-          <span className="mx-8">// GET NOTIFIED</span>
-          <span className="mx-8">// EXPORT CSV</span>
+      <section className="max-w-6xl mx-auto px-6 pb-24 md:pb-32">
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            { num: '01', title: 'Submit Availability', desc: 'Preceptors mark open time slots on a weekly grid. Select the hours that work and submit.' },
+            { num: '02', title: 'Build the Schedule', desc: 'Admins review availability, select preceptors for each slot, and assign startups.' },
+            { num: '03', title: 'Get Notified', desc: 'Email notifications with meeting details and calendar invites. Export or print the full schedule.' },
+          ].map((step, i) => (
+            <div key={i} className="bg-white rounded-xl p-8 shadow-sm">
+              <span className="inline-flex items-center justify-center w-10 h-10 bg-[#E8772E]/10 text-[#E8772E] font-bold text-sm rounded-lg mb-5">
+                {step.num}
+              </span>
+              <h3 className="text-xl font-bold text-[#1A1A1A] mb-3">{step.title}</h3>
+              <p className="text-[#6B6B6B] text-sm leading-relaxed">{step.desc}</p>
+            </div>
+          ))}
         </div>
-      </div>
+      </section>
 
-      <div className="border-b border-black">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-3 divide-x divide-black">
-            {[
-              { num: '01', title: 'Submit\nAvailability', desc: 'Preceptors mark open time slots on a weekly grid. Select the hours that work and submit.' },
-              { num: '02', title: 'Build the\nSchedule', desc: 'Admins review availability, select preceptors for each slot, and assign startups.' },
-              { num: '03', title: 'Get\nNotified', desc: 'Email notifications with meeting details and calendar invites. Export or print the schedule.' },
-            ].map((step, i) => (
-              <div key={i} className="p-8 md:p-10 group">
-                <div className="flex items-start justify-between mb-8">
-                  <span className={`inline-flex items-center justify-center w-10 h-10 ${stepColors[i]} ${stepTextColors[i]} font-mono text-sm font-bold`}>
-                    {step.num}
-                  </span>
-                </div>
-                <h3 className="text-2xl md:text-3xl font-black tracking-tight leading-tight whitespace-pre-line mb-4">{step.title}</h3>
-                <p className="text-neutral-500 text-sm leading-relaxed">{step.desc}</p>
+      <section className="max-w-6xl mx-auto px-6 pb-24 md:pb-32">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-10">Frequently Asked Questions</h2>
+          <div className="divide-y divide-[#E8E4DF]">
+            {faqItems.map((item, i) => (
+              <div key={i}>
+                <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="w-full flex items-center justify-between py-5 text-left">
+                  <span className="font-semibold text-[15px] text-[#1A1A1A] pr-4">{item.q}</span>
+                  <span className={`text-xl text-[#A3A3A3] flex-shrink-0 transition-transform duration-200 ${openFaq === i ? 'rotate-45' : ''}`}>+</span>
+                </button>
+                {openFaq === i && (
+                  <div className="pb-5 -mt-1">
+                    <p className="text-[#6B6B6B] text-sm leading-relaxed">{item.a}</p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="border-b border-black">
-        <div className="max-w-7xl mx-auto px-6 py-16 md:py-20">
-          <div className="grid md:grid-cols-[1fr_1fr] gap-16 items-start">
-            <div>
-              <p className="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-4">FAQ</p>
-              <h2 className="text-4xl md:text-5xl font-black tracking-tighter leading-tight">Common<br />Questions</h2>
-            </div>
-            <div className="divide-y divide-black border-t border-black">
-              {faqItems.map((item, i) => (
-                <div key={i}>
-                  <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    className="w-full flex items-center justify-between py-5 text-left group">
-                    <span className="font-bold text-sm pr-4">{item.q}</span>
-                    <span className={`text-2xl font-light flex-shrink-0 transition-transform ${openFaq === i ? 'rotate-45' : ''}`}>+</span>
-                  </button>
-                  {openFaq === i && (
-                    <div className="pb-5 -mt-1">
-                      <p className="text-neutral-500 text-sm leading-relaxed">{item.a}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+      <section ref={loginRef} className="max-w-6xl mx-auto px-6 pb-24 md:pb-32">
+        <div className="max-w-md mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-3">
+              {isInvite ? 'Create Your Account' : 'Sign In'}
+            </h2>
+            {isInvite && (
+              <div className="mt-4 inline-flex items-center px-4 py-2 bg-[#2D8A56]/10 text-[#2D8A56] text-sm font-semibold rounded-lg">
+                {pendingInvite.role === 'admin' ? 'Admin' : 'Preceptor'}
+                {pendingInvite.cohortName ? ` — ${pendingInvite.cohortName}` : ''}
+              </div>
+            )}
+            {!isInvite && (
+              <p className="text-[#6B6B6B] mt-1">Access your account to manage schedules and availability.</p>
+            )}
           </div>
-        </div>
-      </div>
-
-      <div ref={loginRef} className="border-b border-black">
-        <div className="max-w-7xl mx-auto px-6 py-16 md:py-20">
-          <div className="grid md:grid-cols-[1fr_1fr] gap-16 items-start">
-            <div>
-              <p className="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-4">{isInvite ? 'INVITED' : 'ACCESS'}</p>
-              <h2 className="text-4xl md:text-5xl font-black tracking-tighter leading-tight">
-                {isInvite ? (<>Create Your<br />Account</>) : (<>Sign In</>)}
-              </h2>
+          <div className="bg-white rounded-xl p-8 shadow-sm">
+            <form onSubmit={handleEmailAuth} className="space-y-5">
               {isInvite && (
-                <div className="mt-6 inline-flex items-center px-4 py-2 bg-[#01772c] text-white text-sm font-bold">
-                  {pendingInvite.role === 'admin' ? 'Admin' : 'Preceptor'}
-                  {pendingInvite.cohortName ? ` — ${pendingInvite.cohortName}` : ''}
+                <div>
+                  <label htmlFor="login-name" className="block text-sm font-medium text-[#6B6B6B] mb-2">Full Name</label>
+                  <input id="login-name" type="text" required value={displayName} onChange={e => setDisplayName(e.target.value)}
+                    className="w-full border-b-2 border-[#E8E4DF] bg-transparent py-3 text-[#1A1A1A] text-base outline-none focus:border-[#E8772E] transition-colors placeholder:text-[#A3A3A3]"
+                    placeholder="Dr. Jane Smith" />
                 </div>
               )}
-              {!isInvite && (
-                <p className="text-neutral-500 mt-4 max-w-sm">Access your PreceptorLink account to manage schedules and availability.</p>
+              <div>
+                <label htmlFor="login-email" className="block text-sm font-medium text-[#6B6B6B] mb-2">Email</label>
+                <input id="login-email" type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                  className="w-full border-b-2 border-[#E8E4DF] bg-transparent py-3 text-[#1A1A1A] text-base outline-none focus:border-[#E8772E] transition-colors placeholder:text-[#A3A3A3]"
+                  placeholder="you@example.com" />
+              </div>
+              <div>
+                <label htmlFor="login-password" className="block text-sm font-medium text-[#6B6B6B] mb-2">{isInvite ? 'Create Password' : 'Password'}</label>
+                <div className="relative">
+                  <input id="login-password" type={showPassword ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)}
+                    minLength={isInvite ? 6 : undefined}
+                    className="w-full border-b-2 border-[#E8E4DF] bg-transparent py-3 pr-12 text-[#1A1A1A] text-base outline-none focus:border-[#E8772E] transition-colors placeholder:text-[#A3A3A3]"
+                    placeholder={isInvite ? 'Minimum 6 characters' : '••••••••'} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-0 top-3 text-[#A3A3A3] hover:text-[#6B6B6B] transition-colors">
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+              <button type="submit" disabled={loading}
+                className="w-full mt-2 py-3.5 bg-[#E8772E] text-white font-semibold text-sm rounded-lg hover:bg-[#D4691E] transition-colors disabled:opacity-50">
+                {loading ? (isInvite ? 'Creating account...' : 'Please wait...') : (isInvite ? 'Create Account' : 'Sign In')}
+              </button>
+            </form>
+            <p className="text-center text-[#A3A3A3] text-sm mt-6">
+              {isInvite ? (
+                <>Already have an account?{' '}
+                  <button onClick={() => { setPendingInvite(null); window.history.replaceState({}, '', window.location.pathname); }}
+                    className="text-[#E8772E] hover:underline font-semibold">Sign in instead</button>
+                </>
+              ) : (
+                <>Need an account? Ask your admin for an invite link.</>
               )}
-            </div>
-            <div className="border border-black p-8 md:p-10">
-              <form onSubmit={handleEmailAuth} className="space-y-5">
-                {isInvite && (
-                  <div>
-                    <label htmlFor="login-name" className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Full Name</label>
-                    <input id="login-name" type="text" required value={displayName} onChange={e => setDisplayName(e.target.value)}
-                      className="w-full border-b-2 border-black bg-transparent py-3 text-black text-lg outline-none focus:border-[#0037B1] transition-colors placeholder:text-neutral-300"
-                      placeholder="Dr. Jane Smith" />
-                  </div>
-                )}
-                <div>
-                  <label htmlFor="login-email" className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Email</label>
-                  <input id="login-email" type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                    className="w-full border-b-2 border-black bg-transparent py-3 text-black text-lg outline-none focus:border-[#0037B1] transition-colors placeholder:text-neutral-300"
-                    placeholder="you@example.com" />
-                </div>
-                <div>
-                  <label htmlFor="login-password" className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">{isInvite ? 'Create Password' : 'Password'}</label>
-                  <div className="relative">
-                    <input id="login-password" type={showPassword ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)}
-                      minLength={isInvite ? 6 : undefined}
-                      className="w-full border-b-2 border-black bg-transparent py-3 pr-12 text-black text-lg outline-none focus:border-[#0037B1] transition-colors placeholder:text-neutral-300"
-                      placeholder={isInvite ? 'Minimum 6 characters' : '••••••••'} />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-0 top-3 text-neutral-400 hover:text-black">
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-                <button type="submit" disabled={loading}
-                  className="w-full mt-4 py-4 bg-black text-white font-bold text-sm uppercase tracking-wider hover:bg-neutral-800 transition-colors disabled:opacity-50">
-                  {loading ? (isInvite ? 'Creating account...' : 'Please wait...') : (isInvite ? 'Create Account' : 'Sign In')}
-                </button>
-              </form>
-              <p className="text-center text-neutral-400 text-sm mt-6">
-                {isInvite ? (
-                  <>Already have an account?{' '}
-                    <button onClick={() => { setPendingInvite(null); window.history.replaceState({}, '', window.location.pathname); }}
-                      className="text-[#0037B1] hover:underline font-bold">Sign in instead</button>
-                  </>
-                ) : (
-                  <>Need an account? Ask your admin for an invite link.</>
-                )}
-              </p>
-            </div>
+            </p>
           </div>
         </div>
-      </div>
+      </section>
 
-      <footer className="max-w-7xl mx-auto px-6 py-8 flex justify-center items-center">
-        <span className="font-black text-sm tracking-tight">PreceptorLink</span>
+      <footer className="border-t border-[#E8E4DF]/60">
+        <div className="max-w-6xl mx-auto px-6 py-8 flex justify-center items-center">
+          <span className="text-sm font-semibold text-[#A3A3A3]">PreceptorLink</span>
+        </div>
       </footer>
     </div>
   );

@@ -44,75 +44,40 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
-
-  --animate-marquee: marquee 20s linear infinite;
 }
 
 :root {
-  /* Warm, professional color palette */
-  --background: 40 33% 98%;      /* Very light warm cream */
-  --foreground: 20 20% 15%;      /* Deep warm charcoal/brown */
-  
-  --card: 0 0% 100%;             /* Pure white for contrast */
-  --card-foreground: 20 20% 15%;
-  --card-border: 20 10% 90%;
-  
-  --popover: 0 0% 100%;
-  --popover-foreground: 20 20% 15%;
-  --popover-border: 20 10% 90%;
-  
-  /* Primary: Terracotta / Burnt Orange */
-  --primary: 15 75% 55%;
-  --primary-foreground: 0 0% 100%;
-  
-  /* Secondary: Soft Peach / Sand */
-  --secondary: 25 40% 92%;
-  --secondary-foreground: 15 75% 40%;
-  
-  --muted: 30 20% 94%;
-  --muted-foreground: 20 10% 45%;
-  
-  /* Accent: Deep Navy/Charcoal for contrast elements */
-  --accent: 220 30% 20%;
-  --accent-foreground: 0 0% 100%;
-  
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 100%;
-  
-  --border: 20 15% 90%;
-  --input: 20 15% 90%;
-  --ring: 15 75% 55%;
-  
-  --radius: 0.75rem;
-}
+  --background: 40 17% 96%;
+  --foreground: 30 10% 10%;
 
-.dark {
-  --background: 20 20% 10%;
-  --foreground: 40 33% 96%;
-  
-  --card: 20 15% 14%;
-  --card-foreground: 40 33% 96%;
-  --card-border: 20 15% 20%;
-  
-  --popover: 20 15% 14%;
-  --popover-foreground: 40 33% 96%;
-  --popover-border: 20 15% 20%;
-  
-  --primary: 15 80% 60%;
-  --primary-foreground: 20 20% 10%;
-  
-  --secondary: 20 15% 20%;
-  --secondary-foreground: 40 33% 96%;
-  
-  --muted: 20 15% 18%;
-  --muted-foreground: 20 10% 65%;
-  
-  --accent: 15 50% 30%;
-  --accent-foreground: 40 33% 96%;
-  
-  --border: 20 15% 20%;
-  --input: 20 15% 20%;
-  --ring: 15 80% 60%;
+  --card: 0 0% 100%;
+  --card-foreground: 30 10% 10%;
+  --card-border: 30 10% 90%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 30 10% 10%;
+  --popover-border: 30 10% 90%;
+
+  --primary: 25 78% 54%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 30 15% 93%;
+  --secondary-foreground: 25 78% 40%;
+
+  --muted: 30 12% 94%;
+  --muted-foreground: 30 5% 42%;
+
+  --accent: 25 78% 54%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 30 12% 90%;
+  --input: 30 12% 90%;
+  --ring: 25 78% 54%;
+
+  --radius: 0.5rem;
 }
 
 @layer base {
@@ -125,9 +90,4 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-sans tracking-tight;
   }
-}
-
-@keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
 }
