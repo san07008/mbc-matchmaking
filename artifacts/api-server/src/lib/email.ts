@@ -65,31 +65,31 @@ export function buildInviteEmail(params: {
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;background:#0f172a;font-family:system-ui,-apple-system,sans-serif;">
-  <div style="max-width:560px;margin:40px auto;background:#1e293b;border-radius:16px;border:1px solid #334155;overflow:hidden;">
-    <div style="background:linear-gradient(135deg,#065f46,#1e293b);padding:32px;text-align:center;">
+<body style="margin:0;padding:0;background:#F5F4F0;font-family:system-ui,-apple-system,sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:16px;border:1px solid #E8E4DF;overflow:hidden;">
+    <div style="background:#E8772E;padding:32px;text-align:center;">
       <h1 style="color:#fff;font-size:24px;margin:0 0 8px;">PreceptorLink</h1>
-      <p style="color:#94a3b8;margin:0;font-size:14px;">Master of Business Creation</p>
+      <p style="color:rgba(255,255,255,0.8);margin:0;font-size:14px;">Master of Business Creation</p>
     </div>
     <div style="padding:32px;">
-      <p style="color:#e2e8f0;font-size:16px;line-height:1.6;margin:0 0 16px;">
-        You've been invited to join PreceptorLink as <strong style="color:#34d399;">${roleLabel}</strong>${cohortLine}.
+      <p style="color:#1A1A1A;font-size:16px;line-height:1.6;margin:0 0 16px;">
+        You've been invited to join PreceptorLink as <strong style="color:#2D8A56;">${roleLabel}</strong>${cohortLine}.
       </p>
-      <p style="color:#94a3b8;font-size:14px;line-height:1.6;margin:0 0 24px;">
+      <p style="color:#6B6B6B;font-size:14px;line-height:1.6;margin:0 0 24px;">
         Click the button below to create your account and get started.
       </p>
       <div style="text-align:center;margin:24px 0;">
-        <a href="${inviteLink}" style="display:inline-block;background:#059669;color:#fff;font-weight:700;font-size:16px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        <a href="${inviteLink}" style="display:inline-block;background:#E8772E;color:#fff;font-weight:700;font-size:16px;padding:14px 32px;border-radius:8px;text-decoration:none;">
           Create Your Account
         </a>
       </div>
-      <p style="color:#64748b;font-size:12px;margin:24px 0 0;line-height:1.5;">
+      <p style="color:#A3A3A3;font-size:12px;margin:24px 0 0;line-height:1.5;">
         If the button doesn't work, copy and paste this link into your browser:<br>
-        <a href="${inviteLink}" style="color:#818cf8;word-break:break-all;">${inviteLink}</a>
+        <a href="${inviteLink}" style="color:#E8772E;word-break:break-all;">${inviteLink}</a>
       </p>
     </div>
-    <div style="padding:16px 32px;border-top:1px solid #334155;text-align:center;">
-      <p style="color:#475569;font-size:11px;margin:0;">This is a one-time invite link. It can only be used once.</p>
+    <div style="padding:16px 32px;border-top:1px solid #E8E4DF;text-align:center;">
+      <p style="color:#A3A3A3;font-size:11px;margin:0;">This is a one-time invite link. It can only be used once.</p>
     </div>
   </div>
 </body>
@@ -141,9 +141,9 @@ export function buildAssignmentNotificationEmail(params: {
   const subject = `PreceptorLink Meeting Assignment: ${startupName} — ${day} at ${time}`;
   const zoomSection = zoomLink
     ? `<tr>
-        <td style="color:#94a3b8;padding:8px 16px;font-size:14px;border-bottom:1px solid #334155;">Zoom Link</td>
-        <td style="color:#e2e8f0;padding:8px 16px;font-size:14px;border-bottom:1px solid #334155;">
-          <a href="${zoomLink}" style="color:#818cf8;text-decoration:underline;">${zoomLink}</a>
+        <td style="color:#6B6B6B;padding:8px 16px;font-size:14px;border-bottom:1px solid #E8E4DF;">Zoom Link</td>
+        <td style="color:#1A1A1A;padding:8px 16px;font-size:14px;border-bottom:1px solid #E8E4DF;">
+          <a href="${zoomLink}" style="color:#E8772E;text-decoration:underline;">${zoomLink}</a>
         </td>
       </tr>`
     : "";
@@ -152,39 +152,39 @@ export function buildAssignmentNotificationEmail(params: {
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;background:#0f172a;font-family:system-ui,-apple-system,sans-serif;">
-  <div style="max-width:560px;margin:40px auto;background:#1e293b;border-radius:16px;border:1px solid #334155;overflow:hidden;">
-    <div style="background:linear-gradient(135deg,#312e81,#1e293b);padding:32px;text-align:center;">
+<body style="margin:0;padding:0;background:#F5F4F0;font-family:system-ui,-apple-system,sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:16px;border:1px solid #E8E4DF;overflow:hidden;">
+    <div style="background:#E8772E;padding:32px;text-align:center;">
       <h1 style="color:#fff;font-size:24px;margin:0 0 8px;">Meeting Assignment</h1>
-      <p style="color:#94a3b8;margin:0;font-size:14px;">${cohortName} — PreceptorLink</p>
+      <p style="color:rgba(255,255,255,0.8);margin:0;font-size:14px;">${cohortName} — PreceptorLink</p>
     </div>
     <div style="padding:32px;">
-      <p style="color:#e2e8f0;font-size:16px;line-height:1.6;margin:0 0 16px;">
+      <p style="color:#1A1A1A;font-size:16px;line-height:1.6;margin:0 0 16px;">
         Hi <strong>${preceptorName}</strong>, you've been assigned to meet with a startup!
       </p>
-      <table style="width:100%;border-collapse:collapse;background:#0f172a;border-radius:8px;overflow:hidden;margin:16px 0;">
+      <table style="width:100%;border-collapse:collapse;background:#F5F4F0;border-radius:8px;overflow:hidden;margin:16px 0;">
         <tr>
-          <td style="color:#94a3b8;padding:8px 16px;font-size:14px;border-bottom:1px solid #334155;">Startup</td>
-          <td style="color:#34d399;padding:8px 16px;font-size:14px;font-weight:700;border-bottom:1px solid #334155;">${startupName}</td>
+          <td style="color:#6B6B6B;padding:8px 16px;font-size:14px;border-bottom:1px solid #E8E4DF;">Startup</td>
+          <td style="color:#2D8A56;padding:8px 16px;font-size:14px;font-weight:700;border-bottom:1px solid #E8E4DF;">${startupName}</td>
         </tr>
         <tr>
-          <td style="color:#94a3b8;padding:8px 16px;font-size:14px;border-bottom:1px solid #334155;">Day</td>
-          <td style="color:#e2e8f0;padding:8px 16px;font-size:14px;border-bottom:1px solid #334155;">${day}</td>
+          <td style="color:#6B6B6B;padding:8px 16px;font-size:14px;border-bottom:1px solid #E8E4DF;">Day</td>
+          <td style="color:#1A1A1A;padding:8px 16px;font-size:14px;border-bottom:1px solid #E8E4DF;">${day}</td>
         </tr>
         <tr>
-          <td style="color:#94a3b8;padding:8px 16px;font-size:14px;border-bottom:1px solid #334155;">Time</td>
-          <td style="color:#e2e8f0;padding:8px 16px;font-size:14px;border-bottom:1px solid #334155;">${time}</td>
+          <td style="color:#6B6B6B;padding:8px 16px;font-size:14px;border-bottom:1px solid #E8E4DF;">Time</td>
+          <td style="color:#1A1A1A;padding:8px 16px;font-size:14px;border-bottom:1px solid #E8E4DF;">${time}</td>
         </tr>
         ${zoomSection}
       </table>
       ${zoomLink ? `<div style="text-align:center;margin:24px 0;">
-        <a href="${zoomLink}" style="display:inline-block;background:#4f46e5;color:#fff;font-weight:700;font-size:16px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        <a href="${zoomLink}" style="display:inline-block;background:#E8772E;color:#fff;font-weight:700;font-size:16px;padding:14px 32px;border-radius:8px;text-decoration:none;">
           Join Zoom Meeting
         </a>
       </div>` : ""}
     </div>
-    <div style="padding:16px 32px;border-top:1px solid #334155;text-align:center;">
-      <p style="color:#475569;font-size:11px;margin:0;">PreceptorLink — Master of Business Creation</p>
+    <div style="padding:16px 32px;border-top:1px solid #E8E4DF;text-align:center;">
+      <p style="color:#A3A3A3;font-size:11px;margin:0;">PreceptorLink — Master of Business Creation</p>
     </div>
   </div>
 </body>

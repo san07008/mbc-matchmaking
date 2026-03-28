@@ -65,8 +65,8 @@ PreceptorLink — a React + Vite web app for the University of Utah's Master of 
 - Startup management (CRUD) with profile cards
 - Slot assignments with Zoom link management (max 3 preceptors per slot)
 - ICS calendar file generation for meetings
-- Landing page with hero section, "How It Works" (3 steps), FAQ accordion (7 items), and sign-in form
-- Dark slate theme with Tailwind CSS
+- Landing page with hero section, dotted world map (Natural Earth data), "How It Works" (3 steps), FAQ accordion (7 items), and sign-in form
+- Warm minimalist design: cream (#F5F4F0) backgrounds, amber (#E8772E) accents, warm gray (#E8E4DF) borders, white rounded cards with subtle shadows
 - Super admin email: configured via `VITE_SUPER_ADMIN_EMAIL` env var (server-side)
 - All UI in single file: `src/App.tsx`
 
