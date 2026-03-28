@@ -64,7 +64,7 @@ router.post("/invites", authMiddleware, requireRole("superadmin", "admin"), asyn
     let emailSent = false;
     let emailError: string | undefined;
 
-    if (recipientEmail && baseUrl) {
+    if (recipientEmail && baseUrl && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
       const inviteLink = `${baseUrl}?invite=${token}`;
       const { subject, html } = buildInviteEmail({
         recipientEmail,
