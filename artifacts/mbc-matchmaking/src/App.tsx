@@ -2,7 +2,7 @@ import React, { useState, useEffect, createContext, useContext, useCallback } fr
 import {
   Download, AlertCircle, Calendar, Check, Users,
   Send, User, Clock, ArrowLeft, ShieldAlert, Star, CalendarPlus, Link as LinkIcon, Plus, X, Building,
-  GraduationCap, Briefcase, Settings, Globe, Rocket, LogOut, Shield, Eye, EyeOff, Copy, Mail, UserPlus, Trash2
+  GraduationCap, Briefcase, Settings, Globe, Rocket, LogOut, Shield, Eye, EyeOff, Copy, Mail, UserPlus, Trash2, Printer
 } from 'lucide-react';
 
 const getBaseUrl = () => {
@@ -1245,6 +1245,106 @@ function AdminView() {
     });
   };
 
+  const handleDownloadCSV = () => {
+    const sanitizeCSV = (val: string) => {
+      if (!val) return '';
+      let s = val;
+      if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+      if (s.includes(',') || s.includes('"') || s.includes('\n')) return `"${s.replace(/"/g, '""')}"`;
+      return s;
+    };
+    const rows: string[][] = [['Day', 'Time', 'Preceptor Name', 'Preceptor Email', 'Startup', 'Zoom Link']];
+    surveyDays.forEach((day: string) => {
+      SURVEY_TIMES.forEach((time: string) => {
+        const slotKey = `${day}|${time}`;
+        const assignment = slotAssignments[slotKey] || {};
+        const assignedStartup = startups.find((s: any) => String(s.id) === String(assignment.startupId));
+        const selectedPreceptors = submissions.filter((sub: any) => selections[`${sub.name}|${day}|${time}`]);
+        if (selectedPreceptors.length === 0) {
+          rows.push([sanitizeCSV(day), sanitizeCSV(time), '(Unassigned)', '', sanitizeCSV(assignedStartup?.name || '(No startup)'), sanitizeCSV(assignment.zoom || '')]);
+        } else {
+          selectedPreceptors.forEach((sub: any) => {
+            rows.push([sanitizeCSV(day), sanitizeCSV(time), sanitizeCSV(sub.name), sanitizeCSV(sub.email || ''), sanitizeCSV(assignedStartup?.name || '(No startup)'), sanitizeCSV(assignment.zoom || '')]);
+          });
+        }
+      });
+    });
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${currentCohortSettings.name.replace(/[^a-zA-Z0-9_\- ]/g, '').replace(/\s/g, '_')}_Schedule.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handlePrintSchedule = () => {
+    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    const safeHref = (url: string) => {
+      try { const u = new URL(url); return ['http:', 'https:'].includes(u.protocol) ? esc(url) : ''; } catch { return ''; }
+    };
+    const weekRange = currentCohortSettings.weekStartDate
+      ? formatSafeDate(currentCohortSettings.weekStartDate, 'MMM d, yyyy', currentCohortSettings.timezone)
+      : '';
+    let tableRows = '';
+    surveyDays.forEach((day: string) => {
+      SURVEY_TIMES.forEach((time: string, tIdx: number) => {
+        const slotKey = `${day}|${time}`;
+        const assignment = slotAssignments[slotKey] || {};
+        const assignedStartup = startups.find((s: any) => String(s.id) === String(assignment.startupId));
+        const selectedPreceptors = submissions.filter((sub: any) => selections[`${sub.name}|${day}|${time}`]);
+        const preceptorCell = selectedPreceptors.length > 0
+          ? selectedPreceptors.map((s: any) => `<div>${esc(s.name)}</div>`).join('')
+          : '<span style="color:#94a3b8;font-style:italic;">(Unassigned)</span>';
+        const startupCell = assignedStartup
+          ? esc(assignedStartup.name)
+          : '<span style="color:#94a3b8;font-style:italic;">(No startup)</span>';
+        const href = assignment.zoom ? safeHref(assignment.zoom) : '';
+        const zoomCell = href
+          ? `<a href="${href}" style="color:#6366f1;word-break:break-all;">${esc(assignment.zoom)}</a>`
+          : (assignment.zoom ? esc(assignment.zoom) : '');
+        tableRows += `<tr${tIdx === 0 ? ' style="border-top:2px solid #334155;"' : ''}>
+          <td style="padding:6px 10px;border:1px solid #e2e8f0;white-space:nowrap;">${tIdx === 0 ? esc(day) : ''}</td>
+          <td style="padding:6px 10px;border:1px solid #e2e8f0;white-space:nowrap;">${esc(time)}</td>
+          <td style="padding:6px 10px;border:1px solid #e2e8f0;">${preceptorCell}</td>
+          <td style="padding:6px 10px;border:1px solid #e2e8f0;">${startupCell}</td>
+          <td style="padding:6px 10px;border:1px solid #e2e8f0;font-size:11px;">${zoomCell}</td>
+        </tr>`;
+      });
+    });
+    const printHTML = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(currentCohortSettings.name)} — Schedule</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 40px; color: #1e293b; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 20px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #f1f5f9; padding: 8px 10px; text-align: left; border: 1px solid #e2e8f0; font-weight: 700; }
+  td { vertical-align: top; }
+  @media print {
+    body { margin: 20px; }
+    a { color: #000 !important; text-decoration: none !important; }
+  }
+</style></head><body>
+  <h1>${esc(currentCohortSettings.name)} — Assignment Schedule</h1>
+  <div class="subtitle">Week of ${esc(weekRange)} &bull; ${esc(currentCohortSettings.timezone)}</div>
+  <table>
+    <thead><tr><th>Day</th><th>Time</th><th>Preceptor(s)</th><th>Startup</th><th>Zoom Link</th></tr></thead>
+    <tbody>${tableRows}</tbody>
+  </table>
+</body></html>`;
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printHTML);
+      printWindow.document.close();
+      printWindow.onload = () => printWindow.print();
+    } else {
+      alert('Could not open print window. Please allow pop-ups for this site and try again.');
+    }
+  };
+
   if (!currentCohortSettings) return <div className="text-center py-20 text-slate-400">Select a cohort first.</div>;
 
   return (
@@ -1254,7 +1354,7 @@ function AdminView() {
           <h1 className="text-3xl font-extrabold text-white">Admin Dashboard</h1>
           <p className="text-slate-400">{currentCohortSettings.name} — {submissions.length} preceptors submitted</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-wrap gap-2">
           <button onClick={() => { setAdminInviteEmail(''); setAdminInviteModal(true); }}
             className="flex items-center px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-500 transition-colors">
             {inviteCopied ? <><Check className="w-4 h-4 mr-2" /> Link Copied!</> : <><UserPlus className="w-4 h-4 mr-2" /> Invite Preceptor</>}
@@ -1262,6 +1362,14 @@ function AdminView() {
           <button onClick={() => setShowStartupManager(!showStartupManager)}
             className="flex items-center px-4 py-2 bg-slate-700 text-white text-sm font-bold rounded-lg hover:bg-slate-600 transition-colors">
             <Building className="w-4 h-4 mr-2" /> Manage Startups
+          </button>
+          <button onClick={handleDownloadCSV}
+            className="flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-500 transition-colors">
+            <Download className="w-4 h-4 mr-2" /> Download CSV
+          </button>
+          <button onClick={handlePrintSchedule}
+            className="flex items-center px-4 py-2 bg-slate-700 text-white text-sm font-bold rounded-lg hover:bg-slate-600 transition-colors">
+            <Printer className="w-4 h-4 mr-2" /> Print Schedule
           </button>
         </div>
       </div>
