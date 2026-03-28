@@ -22,7 +22,7 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 artifacts-monorepo/
 ├── artifacts/              # Deployable applications
 │   ├── api-server/         # Express API server
-│   └── mbc-matchmaking/    # MBC Matchmaking React + Vite web app (preview at /)
+│   └── mbc-matchmaking/    # PreceptorLink React + Vite web app (preview at /)
 ├── lib/                    # Shared libraries
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks
@@ -53,7 +53,7 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 
 ### `artifacts/mbc-matchmaking` (`@workspace/mbc-matchmaking`)
 
-MBC Matchmaking Platform — a React + Vite web app for the Master of Business Creation program. Features:
+PreceptorLink — a React + Vite web app for the University of Utah's Master of Business Creation program. Features:
 - Session-based authentication (email/password via PostgreSQL + bcrypt)
 - PostgreSQL database for all data (users, cohorts, submissions, startups, invites, sessions, slot_assignments)
 - API calls via fetch() to `/api/*` routes (proxied to api-server in dev)
@@ -65,6 +65,7 @@ MBC Matchmaking Platform — a React + Vite web app for the Master of Business C
 - Startup management (CRUD) with profile cards
 - Slot assignments with Zoom link management (max 3 preceptors per slot)
 - ICS calendar file generation for meetings
+- Landing page with hero section, "How It Works" (3 steps), FAQ accordion (7 items), and sign-in form
 - Dark slate theme with Tailwind CSS
 - Super admin email: configured via `VITE_SUPER_ADMIN_EMAIL` env var (server-side)
 - All UI in single file: `src/App.tsx`

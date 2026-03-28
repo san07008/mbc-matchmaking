@@ -60,7 +60,7 @@ export function buildInviteEmail(params: {
   const roleLabel = role === "admin" ? "an Administrator" : "a Preceptor";
   const cohortLine = cohortName ? ` for <strong>${cohortName}</strong>` : "";
 
-  const subject = `You're invited to MBC Matchmaking${cohortName ? ` — ${cohortName}` : ""}`;
+  const subject = `You're invited to PreceptorLink${cohortName ? ` — ${cohortName}` : ""}`;
   const html = `
 <!DOCTYPE html>
 <html>
@@ -68,12 +68,12 @@ export function buildInviteEmail(params: {
 <body style="margin:0;padding:0;background:#0f172a;font-family:system-ui,-apple-system,sans-serif;">
   <div style="max-width:560px;margin:40px auto;background:#1e293b;border-radius:16px;border:1px solid #334155;overflow:hidden;">
     <div style="background:linear-gradient(135deg,#065f46,#1e293b);padding:32px;text-align:center;">
-      <h1 style="color:#fff;font-size:24px;margin:0 0 8px;">MBC Matchmaking Platform</h1>
+      <h1 style="color:#fff;font-size:24px;margin:0 0 8px;">PreceptorLink</h1>
       <p style="color:#94a3b8;margin:0;font-size:14px;">Master of Business Creation</p>
     </div>
     <div style="padding:32px;">
       <p style="color:#e2e8f0;font-size:16px;line-height:1.6;margin:0 0 16px;">
-        You've been invited to join the MBC Matchmaking Platform as <strong style="color:#34d399;">${roleLabel}</strong>${cohortLine}.
+        You've been invited to join PreceptorLink as <strong style="color:#34d399;">${roleLabel}</strong>${cohortLine}.
       </p>
       <p style="color:#94a3b8;font-size:14px;line-height:1.6;margin:0 0 24px;">
         Click the button below to create your account and get started.
@@ -110,11 +110,11 @@ export function buildICSContent(params: {
   location?: string;
 }): string {
   const { title, description, startTime, endTime, location } = params;
-  const uid = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}@mbc-matchmaking`;
+  const uid = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}@preceptorlink`;
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//MBC Matchmaking Platform//EN",
+    "PRODID:-//PreceptorLink//EN",
     "BEGIN:VEVENT",
     `UID:${uid}`,
     `DTSTAMP:${formatICSDate(new Date())}`,
@@ -156,7 +156,7 @@ export function buildAssignmentNotificationEmail(params: {
   <div style="max-width:560px;margin:40px auto;background:#1e293b;border-radius:16px;border:1px solid #334155;overflow:hidden;">
     <div style="background:linear-gradient(135deg,#312e81,#1e293b);padding:32px;text-align:center;">
       <h1 style="color:#fff;font-size:24px;margin:0 0 8px;">Meeting Assignment</h1>
-      <p style="color:#94a3b8;margin:0;font-size:14px;">${cohortName} — MBC Matchmaking</p>
+      <p style="color:#94a3b8;margin:0;font-size:14px;">${cohortName} — PreceptorLink</p>
     </div>
     <div style="padding:32px;">
       <p style="color:#e2e8f0;font-size:16px;line-height:1.6;margin:0 0 16px;">
@@ -184,7 +184,7 @@ export function buildAssignmentNotificationEmail(params: {
       </div>` : ""}
     </div>
     <div style="padding:16px 32px;border-top:1px solid #334155;text-align:center;">
-      <p style="color:#475569;font-size:11px;margin:0;">MBC Matchmaking Platform — Master of Business Creation</p>
+      <p style="color:#475569;font-size:11px;margin:0;">PreceptorLink — Master of Business Creation</p>
     </div>
   </div>
 </body>

@@ -2,7 +2,8 @@ import React, { useState, useEffect, createContext, useContext, useCallback } fr
 import {
   Download, AlertCircle, Calendar, Check, Users,
   Send, User, Clock, ArrowLeft, ShieldAlert, Star, CalendarPlus, Link as LinkIcon, Plus, X, Building,
-  GraduationCap, Briefcase, Settings, Globe, Rocket, LogOut, Shield, Eye, EyeOff, Copy, Mail, UserPlus, Trash2, Printer
+  GraduationCap, Briefcase, Settings, Globe, Rocket, LogOut, Shield, Eye, EyeOff, Copy, Mail, UserPlus, Trash2, Printer,
+  ChevronDown, Bell, BarChart3
 } from 'lucide-react';
 
 const getBaseUrl = () => {
@@ -28,7 +29,7 @@ const generateICS = (event: { title: string; description: string; startTime: Dat
   const { title, description, startTime, endTime, location } = event;
   const uid = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}@${window.location.hostname}`;
   const icsContent = [
-    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PROID:-//MBC Matchmaking Platform//EN',
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PROID:-//PreceptorLink//EN',
     'BEGIN:VEVENT',
     `UID:${uid}`,
     `DTSTAMP:${formatICSDate(new Date())}`,
@@ -211,7 +212,7 @@ export default function App() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
               <div className="flex items-center space-x-3">
                 <GraduationCap className="text-red-500 w-6 h-6" />
-                <h1 className="text-xl font-bold text-white">MBC Matchmaking Platform</h1>
+                <h1 className="text-xl font-bold text-white">PreceptorLink</h1>
                 {currentCohortSettings?.timezone && (
                   <span className="ml-4 px-3 py-1 bg-slate-700 rounded-full text-xs font-medium text-white">
                     {currentCohortSettings.name} ({currentCohortSettings.timezone.split('/')[1]?.replace('_', ' ')})
@@ -275,6 +276,8 @@ function LoginPage() {
   const [displayName, setDisplayName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const loginRef = React.useRef<HTMLDivElement>(null);
   const isInvite = !!pendingInvite;
 
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -380,7 +383,7 @@ function LoginPage() {
             <div className="w-20 h-20 bg-emerald-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <UserPlus className="w-10 h-10 text-emerald-400" />
             </div>
-            <h1 className="text-3xl font-extrabold text-white mb-2">Welcome to MBC Matchmaking</h1>
+            <h1 className="text-3xl font-extrabold text-white mb-2">Welcome to PreceptorLink</h1>
             <div className="inline-flex items-center px-4 py-2 bg-emerald-600/20 border border-emerald-500/30 rounded-full mt-2">
               <Star className="w-4 h-4 text-emerald-400 mr-2" />
               <span className="text-emerald-300 text-sm font-semibold">
@@ -434,13 +437,88 @@ function LoginPage() {
     );
   }
 
+  const faqItems = [
+    { q: 'What is PreceptorLink?', a: 'PreceptorLink is a scheduling platform for the University of Utah\'s Master of Business Creation (MBC) program. It connects preceptors with startups by streamlining the availability and meeting scheduling process.' },
+    { q: 'How do I submit my availability as a preceptor?', a: 'After logging in, select your cohort and choose "I am a Preceptor." You\'ll see a weekly grid of time slots — simply click on the times you\'re available, then click "Submit Availability." You can update your selections at any time.' },
+    { q: 'Can I change my availability after submitting?', a: 'Yes! Log back in and go to the availability grid. Your previous selections will still be there. Update any slots and re-submit to save your changes.' },
+    { q: 'How will I know when my meeting is scheduled?', a: 'Once an admin assigns you to a meeting, you\'ll receive an email notification with the startup name, day, time, Zoom link, and a calendar invite (.ics file) you can add directly to your calendar.' },
+    { q: 'How do admins invite preceptors?', a: 'Admins can generate a unique invite link from the dashboard and share it via email or message. The platform can also send the invite directly via email if SMTP is configured.' },
+    { q: 'Can admins export the schedule?', a: 'Yes. The admin dashboard has a "Download CSV" button for spreadsheet export and a "Print Schedule" button for a clean, printable view of all assignments.' },
+    { q: 'Who do I contact if I have issues?', a: 'Reach out to your MBC program administrator. They manage the platform and can help with any account or scheduling questions.' },
+  ];
+
   return (
-    <div className="min-h-[85vh] flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
+    <div className="animate-in fade-in duration-500">
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-slate-900 to-emerald-900/10" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-indigo-500/5 rounded-full blur-3xl" />
+        <div className="relative max-w-4xl mx-auto px-4 pt-20 pb-16 text-center">
+          <div className="inline-flex items-center px-4 py-2 bg-indigo-600/20 border border-indigo-500/30 rounded-full mb-6">
+            <GraduationCap className="w-4 h-4 text-indigo-400 mr-2" />
+            <span className="text-indigo-300 text-sm font-semibold">University of Utah — Master of Business Creation</span>
+          </div>
+          <h1 className="text-5xl sm:text-6xl font-extrabold text-white mb-4 tracking-tight">
+            Preceptor<span className="text-indigo-400">Link</span>
+          </h1>
+          <p className="text-xl text-slate-300 mb-3 max-w-2xl mx-auto">Connecting Preceptors with Startups</p>
+          <p className="text-slate-400 mb-10 max-w-xl mx-auto">Streamline your preceptor-startup meeting scheduling. Submit availability, build schedules, and get notified — all in one place.</p>
+          <button onClick={() => loginRef.current?.scrollIntoView({ behavior: 'smooth' })}
+            className="inline-flex items-center px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-lg rounded-xl transition-all shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5">
+            <Rocket className="w-5 h-5 mr-2" /> Sign In to Get Started
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 py-20">
+        <div className="text-center mb-14">
+          <h2 className="text-3xl font-extrabold text-white mb-3">How It Works</h2>
+          <p className="text-slate-400">Three simple steps from availability to confirmed meetings</p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-8">
+          {[
+            { icon: <Calendar className="w-8 h-8 text-emerald-400" />, title: 'Submit Availability', desc: 'Preceptors mark their open time slots on a simple weekly grid. Select the hours that work for you and submit.', color: 'emerald' },
+            { icon: <BarChart3 className="w-8 h-8 text-indigo-400" />, title: 'Build the Schedule', desc: 'Admins review availability, select preceptors for each slot, and assign startups to create the perfect matchups.', color: 'indigo' },
+            { icon: <Bell className="w-8 h-8 text-amber-400" />, title: 'Get Notified', desc: 'Everyone receives email notifications with meeting details and calendar invites. Export or print the full schedule.', color: 'amber' },
+          ].map((step, i) => (
+            <div key={i} className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8 text-center hover:border-slate-600 transition-colors">
+              <div className="w-16 h-16 bg-slate-700/50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                {step.icon}
+              </div>
+              <div className="inline-flex items-center justify-center w-7 h-7 bg-slate-700 rounded-full text-xs font-bold text-slate-300 mb-3">{i + 1}</div>
+              <h3 className="text-lg font-bold text-white mb-2">{step.title}</h3>
+              <p className="text-slate-400 text-sm leading-relaxed">{step.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="max-w-3xl mx-auto px-4 pb-20">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-extrabold text-white mb-3">Frequently Asked Questions</h2>
+          <p className="text-slate-400">Everything you need to know about using PreceptorLink</p>
+        </div>
+        <div className="space-y-3">
+          {faqItems.map((item, i) => (
+            <div key={i} className="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden">
+              <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-slate-700/30 transition-colors">
+                <span className="font-semibold text-white text-sm">{item.q}</span>
+                <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform flex-shrink-0 ml-4 ${openFaq === i ? 'rotate-180' : ''}`} />
+              </button>
+              {openFaq === i && (
+                <div className="px-6 pb-4 animate-in slide-in-from-top-2 duration-200">
+                  <p className="text-slate-400 text-sm leading-relaxed">{item.a}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div ref={loginRef} className="max-w-md mx-auto px-4 pb-20">
         <div className="text-center mb-8">
-          <Rocket className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-4xl font-extrabold text-white">MBC Matchmaking</h1>
-          <p className="text-slate-400 mt-2">Sign in to access the platform</p>
+          <h2 className="text-2xl font-extrabold text-white mb-2">Sign In</h2>
+          <p className="text-slate-400 text-sm">Access your PreceptorLink account</p>
         </div>
         <div className="bg-slate-800 rounded-2xl border border-slate-700 p-8 shadow-2xl">
           <form onSubmit={handleEmailAuth} className="space-y-4">
@@ -462,7 +540,7 @@ function LoginPage() {
               </div>
             </div>
             <button type="submit" disabled={loading}
-              className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg transition-colors shadow-lg shadow-red-500/20 disabled:opacity-50">
+              className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition-colors shadow-lg shadow-indigo-500/20 disabled:opacity-50">
               {loading ? 'Please wait...' : 'Sign In'}
             </button>
           </form>
@@ -471,6 +549,10 @@ function LoginPage() {
           </p>
         </div>
       </div>
+
+      <footer className="border-t border-slate-800 py-8 text-center">
+        <p className="text-slate-500 text-sm">PreceptorLink — University of Utah, Master of Business Creation</p>
+      </footer>
     </div>
   );
 }
