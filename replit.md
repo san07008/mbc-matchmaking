@@ -59,7 +59,8 @@ MBC Matchmaking Platform — a React + Vite web app for the Master of Business C
 - API calls via fetch() to `/api/*` routes (proxied to api-server in dev)
 - Multiple views: Login, Cohort Selection, Role Selection, Preceptor Survey, Admin Dashboard, Super Admin Panel
 - Role-based access: superadmin, admin, preceptor
-- **Invite system**: No public registration. Super admins generate admin invite links; admins generate preceptor invite links (scoped to a cohort). Each invite is one-time use and auto-assigns the correct role on registration.
+- **Invite system**: No public registration. Super admins generate admin invite links; admins generate preceptor invite links (scoped to a cohort). Each invite is one-time use and auto-assigns the correct role on registration. Invites can optionally include a recipient email to send the invite link directly.
+- **Email notifications**: Nodemailer-based email system for invite delivery and preceptor assignment notifications. Requires SMTP configuration (SMTP_HOST, SMTP_USER, SMTP_PASS, optional SMTP_PORT and SMTP_FROM). Gracefully degrades when SMTP is not configured — invites still work via clipboard copy.
 - Preceptor availability scheduling with time slot grid (8 hourly slots, 9 AM–4 PM, 5 weekdays)
 - Startup management (CRUD) with profile cards
 - Slot assignments with Zoom link management (max 3 preceptors per slot)
@@ -81,8 +82,8 @@ Express 5 API server with session-based auth. Routes live in `src/routes/`.
   - `cohorts.ts` — GET /cohorts, POST /cohorts, DELETE /cohorts/:id
   - `submissions.ts` — GET/POST /cohorts/:cohortId/submissions
   - `startups.ts` — GET/POST/PUT/DELETE /cohorts/:cohortId/startups
-  - `invites.ts` — GET /invites, POST /invites, GET /invites/validate/:token, DELETE /invites/:id
-  - `slot-assignments.ts` — GET/PUT /cohorts/:cohortId/slot-assignments
+  - `invites.ts` — GET /invites, POST /invites (with optional recipientEmail+baseUrl for email delivery), GET /invites/validate/:token, DELETE /invites/:id, GET /invites/email-status
+  - `slot-assignments.ts` — GET/PUT /cohorts/:cohortId/slot-assignments, POST /cohorts/:cohortId/notify-assignment
   - `health.ts` — GET /healthz
 - Depends on: `@workspace/db`
 - `pnpm --filter @workspace/api-server run dev` — run the dev server

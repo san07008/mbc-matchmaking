@@ -1,8 +1,9 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
-import { slotAssignmentsTable } from "@workspace/db/schema";
-import { eq } from "drizzle-orm";
+import { slotAssignmentsTable, submissionsTable } from "@workspace/db/schema";
+import { eq, and } from "drizzle-orm";
 import { authMiddleware, requireRole } from "../middleware/auth";
+import { sendEmail, buildAssignmentNotificationEmail, isEmailConfigured } from "../lib/email";
 
 const router: IRouter = Router();
 
@@ -38,6 +39,51 @@ router.put("/cohorts/:cohortId/slot-assignments", authMiddleware, requireRole("s
         .where(eq(slotAssignmentsTable.cohortId, cohortId));
     }
     res.json({ ok: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post("/cohorts/:cohortId/notify-assignment", authMiddleware, requireRole("superadmin", "admin"), async (req, res) => {
+  try {
+    const cohortId = parseInt(req.params.cohortId as string);
+    const { preceptorName, day, time, startupName, zoomLink, cohortName } = req.body;
+
+    if (!preceptorName || !day || !time || !startupName || !cohortName) {
+      res.status(400).json({ error: "Missing required fields" });
+      return;
+    }
+
+    if (!isEmailConfigured()) {
+      res.status(400).json({ error: "Email service not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASS environment variables." });
+      return;
+    }
+
+    const submissions = await db.select().from(submissionsTable)
+      .where(and(eq(submissionsTable.cohortId, cohortId), eq(submissionsTable.name, preceptorName)));
+
+    if (submissions.length === 0) {
+      res.status(404).json({ error: "Could not find submission for this preceptor" });
+      return;
+    }
+
+    const preceptorEmail = submissions[0].email;
+    if (!preceptorEmail) {
+      res.status(400).json({ error: "No email address found for this preceptor" });
+      return;
+    }
+
+    const { subject, html } = buildAssignmentNotificationEmail({
+      preceptorName,
+      startupName,
+      day,
+      time,
+      zoomLink,
+      cohortName,
+    });
+
+    const result = await sendEmail(preceptorEmail, subject, html);
+    res.json({ success: result.success, error: result.error });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

@@ -576,6 +576,14 @@ function SuperAdminView() {
   const [loading, setLoading] = useState(false);
   const [invites, setInvites] = useState<any[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [emailConfigured, setEmailConfigured] = useState(false);
+  const [inviteModal, setInviteModal] = useState<{ role: string; cohortId?: number; cohortName?: string } | null>(null);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteSending, setInviteSending] = useState(false);
+
+  useEffect(() => {
+    api('/invites/email-status').then(d => setEmailConfigured(d.configured)).catch(() => {});
+  }, []);
 
   const loadUsers = useCallback(async () => {
     try {
@@ -662,19 +670,43 @@ function SuperAdminView() {
     }
   };
 
-  const handleCreateInvite = async (role: string, cohortId?: number, cohortName?: string) => {
+  const openInviteModal = (role: string, cohortId?: number, cohortName?: string) => {
+    setInviteEmail('');
+    setInviteModal({ role, cohortId, cohortName });
+  };
+
+  const handleCreateInvite = async () => {
+    if (!inviteModal) return;
+    setInviteSending(true);
     try {
+      const body: any = {
+        role: inviteModal.role,
+        cohortId: inviteModal.cohortId || null,
+        cohortName: inviteModal.cohortName || null,
+      };
+      if (inviteEmail.trim()) {
+        body.recipientEmail = inviteEmail.trim();
+        body.baseUrl = getBaseUrl();
+      }
       const invite = await api('/invites', {
         method: 'POST',
-        body: JSON.stringify({ role, cohortId: cohortId || null, cohortName: cohortName || null }),
+        body: JSON.stringify(body),
       });
       const link = `${getBaseUrl()}?invite=${invite.token}`;
       await navigator.clipboard.writeText(link);
       setCopiedId(invite.token);
       setTimeout(() => setCopiedId(null), 3000);
+      setInviteModal(null);
       loadInvites();
+      if (invite.emailSent) {
+        setError('');
+      } else if (inviteEmail.trim() && invite.emailError) {
+        setError(`Invite created but email failed: ${invite.emailError}`);
+      }
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      setInviteSending(false);
     }
   };
 
@@ -775,19 +807,19 @@ function SuperAdminView() {
           <Mail className="w-6 h-6 mr-3 text-indigo-400" /> Invite Management
         </h2>
         <div className="flex flex-wrap gap-3 mb-8">
-          <button onClick={() => handleCreateInvite('admin')}
+          <button onClick={() => openInviteModal('admin')}
             className="flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-500 transition-colors">
-            <UserPlus className="w-4 h-4 mr-2" /> Generate Admin Invite Link
+            <UserPlus className="w-4 h-4 mr-2" /> Invite Admin
           </button>
           {cohorts.map((c: any) => (
-            <button key={c.id} onClick={() => handleCreateInvite('preceptor', c.id, c.name)}
+            <button key={c.id} onClick={() => openInviteModal('preceptor', c.id, c.name)}
               className="flex items-center px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-500 transition-colors">
               <UserPlus className="w-4 h-4 mr-2" /> Invite Preceptor to {c.name}
             </button>
           ))}
         </div>
         <p className="text-slate-400 text-sm mb-4">
-          Click a button above to generate a one-time invite link (automatically copied to clipboard). Share the link with the person you want to invite.
+          Click a button above to generate a one-time invite link. Optionally enter an email to send the invite directly.
         </p>
         <div className="space-y-3 max-h-[40vh] overflow-y-auto custom-scrollbar">
           {invites.length === 0 && <p className="text-slate-500 italic text-sm">No invites generated yet.</p>}
@@ -822,6 +854,38 @@ function SuperAdminView() {
           ))}
         </div>
       </div>
+
+      {inviteModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-bold text-white mb-2 flex items-center">
+              <UserPlus className="w-6 h-6 mr-2 text-indigo-400" />
+              {inviteModal.role === 'admin' ? 'Invite Admin' : `Invite Preceptor${inviteModal.cohortName ? ` to ${inviteModal.cohortName}` : ''}`}
+            </h3>
+            <p className="text-slate-400 text-sm mb-6">
+              The invite link will be copied to your clipboard. Optionally enter an email to send it directly.
+            </p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-slate-300 text-sm font-semibold mb-1">Recipient Email (optional)</label>
+                <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
+                  placeholder="person@example.com"
+                  className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white outline-none focus:ring-2 focus:ring-indigo-500" />
+                {!emailConfigured && inviteEmail.trim() && (
+                  <p className="text-amber-400 text-xs mt-1">SMTP not configured. Email won't be sent, but the link will still be copied.</p>
+                )}
+              </div>
+            </div>
+            <div className="flex space-x-3 mt-6">
+              <button onClick={() => setInviteModal(null)} className="flex-1 px-4 py-3 bg-slate-700 text-white font-bold rounded-lg hover:bg-slate-600 transition-colors">Cancel</button>
+              <button onClick={handleCreateInvite} disabled={inviteSending}
+                className="flex-1 px-4 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-500 transition-colors disabled:opacity-50 flex items-center justify-center">
+                {inviteSending ? 'Creating...' : <><Mail className="w-4 h-4 mr-2" /> {inviteEmail.trim() ? 'Send & Copy Link' : 'Copy Link'}</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -970,6 +1034,15 @@ function AdminView() {
   const [zoomModal, setZoomModal] = useState<any>(null);
   const [profileCard, setProfileCard] = useState<any>(null);
   const [inviteCopied, setInviteCopied] = useState(false);
+  const [emailConfigured, setEmailConfigured] = useState(false);
+  const [adminInviteModal, setAdminInviteModal] = useState(false);
+  const [adminInviteEmail, setAdminInviteEmail] = useState('');
+  const [adminInviteSending, setAdminInviteSending] = useState(false);
+  const [notifyStatus, setNotifyStatus] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    api('/invites/email-status').then(d => setEmailConfigured(d.configured)).catch(() => {});
+  }, []);
 
   const loadSubmissions = useCallback(async () => {
     if (!currentCohortId) return;
@@ -1004,17 +1077,65 @@ function AdminView() {
 
   const handleInvitePreceptor = async () => {
     if (!currentCohortId || !currentCohortSettings) return;
+    setAdminInviteSending(true);
     try {
+      const body: any = {
+        role: 'preceptor',
+        cohortId: currentCohortId,
+        cohortName: currentCohortSettings.name,
+      };
+      if (adminInviteEmail.trim()) {
+        body.recipientEmail = adminInviteEmail.trim();
+        body.baseUrl = getBaseUrl();
+      }
       const invite = await api('/invites', {
         method: 'POST',
-        body: JSON.stringify({ role: 'preceptor', cohortId: currentCohortId, cohortName: currentCohortSettings.name }),
+        body: JSON.stringify(body),
       });
       const link = `${getBaseUrl()}?invite=${invite.token}`;
       await navigator.clipboard.writeText(link);
       setInviteCopied(true);
       setTimeout(() => setInviteCopied(false), 3000);
+      setAdminInviteModal(false);
+      setAdminInviteEmail('');
+      if (invite.emailSent) {
+        setError('');
+      } else if (adminInviteEmail.trim() && invite.emailError) {
+        setError(`Invite created but email failed: ${invite.emailError}`);
+      }
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      setAdminInviteSending(false);
+    }
+  };
+
+  const handleNotifyPreceptor = async (preceptorName: string, day: string, time: string) => {
+    const slotKey = `${day}|${time}`;
+    const assignment = slotAssignments[slotKey] || {};
+    const startup = startups.find((s: any) => String(s.id) === String(assignment.startupId));
+    if (!startup || !currentCohortSettings) return;
+
+    const notifyKey = `${preceptorName}|${day}|${time}`;
+    setNotifyStatus(prev => ({ ...prev, [notifyKey]: 'sending' }));
+    try {
+      await api(`/cohorts/${currentCohortId}/notify-assignment`, {
+        method: 'POST',
+        body: JSON.stringify({
+          preceptorName,
+          day,
+          time,
+          startupName: startup.name,
+          zoomLink: assignment.zoom || '',
+          cohortName: currentCohortSettings.name,
+        }),
+      });
+      setNotifyStatus(prev => ({ ...prev, [notifyKey]: 'sent' }));
+      setTimeout(() => setNotifyStatus(prev => ({ ...prev, [notifyKey]: '' })), 3000);
+    } catch (err: any) {
+      setNotifyStatus(prev => ({ ...prev, [notifyKey]: 'error' }));
+      setError(err.message);
+      setTimeout(() => setNotifyStatus(prev => ({ ...prev, [notifyKey]: '' })), 3000);
     }
   };
 
@@ -1109,7 +1230,7 @@ function AdminView() {
           <p className="text-slate-400">{currentCohortSettings.name} — {submissions.length} preceptors submitted</p>
         </div>
         <div className="flex space-x-3">
-          <button onClick={handleInvitePreceptor}
+          <button onClick={() => { setAdminInviteEmail(''); setAdminInviteModal(true); }}
             className="flex items-center px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-500 transition-colors">
             {inviteCopied ? <><Check className="w-4 h-4 mr-2" /> Link Copied!</> : <><UserPlus className="w-4 h-4 mr-2" /> Invite Preceptor</>}
           </button>
@@ -1202,14 +1323,29 @@ function AdminView() {
                       <td key={`${day}-${time}`} onClick={() => isAvailable && toggleSelection(sub.name, day, time)}
                         className={`p-1.5 text-center transition-colors ${idx === SURVEY_TIMES.length - 1 ? 'border-r' : ''} border-slate-700 ${isAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
                         <div className={`w-full h-10 rounded-md flex items-center justify-center transition-all ${isSelected ? 'bg-emerald-500 text-white' : isAvailable ? 'bg-slate-700/50 hover:bg-slate-600/50 text-emerald-400' : 'bg-slate-800/20'}`}>
-                          {isSelected ? (
-                            <div className="flex items-center space-x-1">
-                              <Star className="w-4 h-4" fill="currentColor" />
-                              <button onClick={e => { e.stopPropagation(); handleGenerateICS(sub.name, day, time); }} className="text-white hover:text-indigo-300">
-                                <CalendarPlus className="w-5 h-5" />
-                              </button>
-                            </div>
-                          ) : isAvailable ? <Check className="w-5 h-5" strokeWidth={3} /> : <span className="text-slate-600">-</span>}
+                          {isSelected ? (() => {
+                            const slotKey2 = `${day}|${time}`;
+                            const assign2 = slotAssignments[slotKey2] || {};
+                            const hasStartup2 = startups.some((s: any) => String(s.id) === String(assign2.startupId));
+                            const nKey = `${sub.name}|${day}|${time}`;
+                            const nStatus = notifyStatus[nKey];
+                            return (
+                              <div className="flex items-center space-x-1">
+                                <Star className="w-3 h-3" fill="currentColor" />
+                                <button onClick={e => { e.stopPropagation(); handleGenerateICS(sub.name, day, time); }} className="text-white hover:text-indigo-300" title="Download calendar invite">
+                                  <CalendarPlus className="w-4 h-4" />
+                                </button>
+                                {hasStartup2 && emailConfigured && (
+                                  <button onClick={e => { e.stopPropagation(); handleNotifyPreceptor(sub.name, day, time); }}
+                                    disabled={nStatus === 'sending'}
+                                    className={`transition-colors ${nStatus === 'sent' ? 'text-emerald-300' : nStatus === 'error' ? 'text-red-300' : 'text-white hover:text-amber-300'}`}
+                                    title={nStatus === 'sent' ? 'Notification sent!' : nStatus === 'error' ? 'Failed to send' : 'Email notification to preceptor'}>
+                                    <Mail className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })() : isAvailable ? <Check className="w-5 h-5" strokeWidth={3} /> : <span className="text-slate-600">-</span>}
                         </div>
                       </td>
                     );
@@ -1262,6 +1398,35 @@ function AdminView() {
             </div>
             {profileCard.founders && <p className="text-slate-300 text-sm mb-2"><span className="font-bold text-slate-200">Founders:</span> {profileCard.founders}</p>}
             {profileCard.description && <p className="text-slate-400 text-sm mb-4">{profileCard.description}</p>}
+          </div>
+        </div>
+      )}
+
+      {adminInviteModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-bold text-white mb-2 flex items-center">
+              <UserPlus className="w-6 h-6 mr-2 text-emerald-400" /> Invite Preceptor to {currentCohortSettings?.name}
+            </h3>
+            <p className="text-slate-400 text-sm mb-6">
+              The invite link will be copied to your clipboard. Optionally enter an email to send it directly.
+            </p>
+            <div>
+              <label className="block text-slate-300 text-sm font-semibold mb-1">Recipient Email (optional)</label>
+              <input type="email" value={adminInviteEmail} onChange={e => setAdminInviteEmail(e.target.value)}
+                placeholder="preceptor@example.com"
+                className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white outline-none focus:ring-2 focus:ring-emerald-500" />
+              {!emailConfigured && adminInviteEmail.trim() && (
+                <p className="text-amber-400 text-xs mt-1">SMTP not configured. Email won't be sent, but the link will still be copied.</p>
+              )}
+            </div>
+            <div className="flex space-x-3 mt-6">
+              <button onClick={() => setAdminInviteModal(false)} className="flex-1 px-4 py-3 bg-slate-700 text-white font-bold rounded-lg hover:bg-slate-600 transition-colors">Cancel</button>
+              <button onClick={handleInvitePreceptor} disabled={adminInviteSending}
+                className="flex-1 px-4 py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-500 transition-colors disabled:opacity-50 flex items-center justify-center">
+                {adminInviteSending ? 'Creating...' : <><Mail className="w-4 h-4 mr-2" /> {adminInviteEmail.trim() ? 'Send & Copy Link' : 'Copy Link'}</>}
+              </button>
+            </div>
           </div>
         </div>
       )}

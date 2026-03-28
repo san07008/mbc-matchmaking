@@ -4,8 +4,13 @@ import { db } from "@workspace/db";
 import { invitesTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import { authMiddleware, requireRole } from "../middleware/auth";
+import { sendEmail, buildInviteEmail, isEmailConfigured } from "../lib/email";
 
 const router: IRouter = Router();
+
+router.get("/invites/email-status", authMiddleware, requireRole("superadmin", "admin"), (_req, res) => {
+  res.json({ configured: isEmailConfigured() });
+});
 
 router.get("/invites", authMiddleware, requireRole("superadmin"), async (_req, res) => {
   try {
@@ -37,7 +42,7 @@ router.get("/invites/validate/:token", async (req, res) => {
 
 router.post("/invites", authMiddleware, requireRole("superadmin", "admin"), async (req, res) => {
   try {
-    const { role, cohortId, cohortName } = req.body;
+    const { role, cohortId, cohortName, recipientEmail, baseUrl } = req.body;
     if (!role || !["admin", "preceptor"].includes(role)) {
       res.status(400).json({ error: "Valid role is required" });
       return;
@@ -55,7 +60,24 @@ router.post("/invites", authMiddleware, requireRole("superadmin", "admin"), asyn
       used: false,
       createdBy: req.user!.email,
     }).returning();
-    res.json(invite);
+
+    let emailSent = false;
+    let emailError: string | undefined;
+
+    if (recipientEmail && baseUrl) {
+      const inviteLink = `${baseUrl}?invite=${token}`;
+      const { subject, html } = buildInviteEmail({
+        recipientEmail,
+        role,
+        cohortName,
+        inviteLink,
+      });
+      const result = await sendEmail(recipientEmail, subject, html);
+      emailSent = result.success;
+      emailError = result.error;
+    }
+
+    res.json({ ...invite, emailSent, emailError });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
