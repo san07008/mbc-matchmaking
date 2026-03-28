@@ -378,13 +378,13 @@ function LoginPage() {
   }, [isInvite]);
 
   const faqItems = [
-    { q: 'What is PreceptorLink?', a: 'PreceptorLink is a scheduling platform for the University of Utah\'s Master of Business Creation (MBC) program. It connects preceptors with startups by streamlining the availability and meeting scheduling process.' },
+    { q: 'What is PreceptorLink?', a: 'PreceptorLink is a scheduling platform that connects preceptors with startups by streamlining the availability and meeting scheduling process.' },
     { q: 'How do I submit my availability?', a: 'After logging in, select your cohort and choose "I am a Preceptor." You\'ll see a weekly grid of time slots — click on the times you\'re available, then click "Submit Availability." You can update your selections at any time.' },
     { q: 'Can I change my availability after submitting?', a: 'Yes. Log back in and go to the availability grid. Your previous selections will still be there. Update any slots and re-submit to save your changes.' },
     { q: 'How will I know when my meeting is scheduled?', a: 'Once an admin assigns you to a meeting, you\'ll receive an email notification with the startup name, day, time, Zoom link, and a calendar invite (.ics file) you can add directly to your calendar.' },
     { q: 'How do admins invite preceptors?', a: 'Admins can generate a unique invite link from the dashboard and share it via email or message. The platform can also send the invite directly via email if SMTP is configured.' },
     { q: 'Can admins export the schedule?', a: 'Yes. The admin dashboard includes CSV export and a printable schedule view for all assignments.' },
-    { q: 'Who do I contact if I have issues?', a: 'Reach out to your MBC program administrator. They manage the platform and can help with any account or scheduling questions.' },
+    { q: 'Who do I contact if I have issues?', a: 'Reach out to your program administrator. They manage the platform and can help with any account or scheduling questions.' },
   ];
 
   const stepColors = ['bg-[#0037B1]', 'bg-[#01772c]', 'bg-[#FFDB01]'];
@@ -398,7 +398,6 @@ function LoginPage() {
             <span className="text-xl font-black tracking-tight">PreceptorLink</span>
           </div>
           <div className="flex items-center space-x-6">
-            <span className="hidden sm:block font-mono text-xs text-neutral-400 uppercase tracking-widest">University of Utah</span>
             <button onClick={() => loginRef.current?.scrollIntoView({ behavior: 'smooth' })}
               className="px-5 py-2 bg-black text-white text-sm font-bold uppercase tracking-wider hover:bg-neutral-800 transition-colors">
               Sign In
@@ -411,7 +410,6 @@ function LoginPage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid md:grid-cols-[1fr_auto] items-end">
             <div className="py-16 md:py-24 pr-8">
-              <p className="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-6">Master of Business Creation</p>
               <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.9] mb-8">
                 Connecting<br />Preceptors<br />with Startups<span className="inline-block w-3 h-12 sm:h-16 lg:h-20 bg-[#0037B1] ml-1 align-bottom" />
               </h1>
@@ -560,9 +558,8 @@ function LoginPage() {
         </div>
       </div>
 
-      <footer className="max-w-7xl mx-auto px-6 py-8 flex flex-col sm:flex-row justify-between items-center">
+      <footer className="max-w-7xl mx-auto px-6 py-8 flex justify-center items-center">
         <span className="font-black text-sm tracking-tight">PreceptorLink</span>
-        <span className="font-mono text-xs text-neutral-400 uppercase tracking-widest mt-2 sm:mt-0">University of Utah, Master of Business Creation</span>
       </footer>
     </div>
   );
@@ -583,7 +580,7 @@ function CohortSelectionPage() {
         <Globe className="w-20 h-20 text-red-400 mx-auto mb-6" />
         <h1 className="text-5xl font-extrabold text-white mb-4 leading-tight">Select Your Cohort</h1>
         <p className="text-slate-300 text-lg max-w-3xl mx-auto leading-relaxed">
-          Choose the specific Master of Business Creation program you are associated with.
+          Choose the specific program you are associated with.
         </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -645,7 +642,7 @@ function RoleSelectionPage() {
             <User className="w-8 h-8" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">I am a Preceptor</h2>
-          <p className="text-slate-400">Submit or update your availability to mentor our MBC startups.</p>
+          <p className="text-slate-400">Submit or update your availability to mentor startups.</p>
         </div>
         {(userRole === 'superadmin' || userRole === 'admin') && (
           <div onClick={() => setView('admin')}
