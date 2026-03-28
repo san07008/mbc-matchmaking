@@ -190,10 +190,10 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="flex flex-col items-center space-y-4">
-          <Calendar className="w-12 h-12 text-indigo-400 animate-pulse" />
-          <p className="text-slate-400 font-medium">Connecting to Scheduling Service...</p>
+          <Calendar className="w-12 h-12 text-[#0037B1] animate-pulse" />
+          <p className="text-neutral-500 font-medium">Connecting to Scheduling Service...</p>
         </div>
       </div>
     );
@@ -208,14 +208,13 @@ export default function App() {
       {view === 'login' ? (
         <LoginPage />
       ) : (
-      <div className="min-h-screen bg-slate-900 text-slate-300 font-sans pb-20">
-        <header className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700/50 sticky top-0 z-50">
+      <div className="min-h-screen bg-white text-neutral-700 font-sans pb-20">
+        <header className="bg-white border-b border-black sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
             <div className="flex items-center space-x-3">
-              <GraduationCap className="text-red-500 w-6 h-6" />
-              <h1 className="text-xl font-bold text-white">PreceptorLink</h1>
+              <h1 className="text-xl font-black tracking-tight text-black">PreceptorLink</h1>
               {currentCohortSettings?.timezone && (
-                <span className="ml-4 px-3 py-1 bg-slate-700 rounded-full text-xs font-medium text-white">
+                <span className="ml-4 px-3 py-1 bg-neutral-100 border border-neutral-200 text-xs font-bold text-black">
                   {currentCohortSettings.name} ({currentCohortSettings.timezone.split('/')[1]?.replace('_', ' ')})
                 </span>
               )}
@@ -224,19 +223,19 @@ export default function App() {
               {view !== 'cohortSelection' && (
                 <button
                   onClick={() => { setView('cohortSelection'); setCurrentCohortId(null); setError(null); }}
-                  className="text-sm flex items-center text-slate-400 hover:text-white transition-colors font-medium"
+                  className="text-sm flex items-center text-neutral-500 hover:text-black transition-colors font-medium"
                 >
                   <ArrowLeft className="w-4 h-4 mr-1.5" /> Back to Cohorts
                 </button>
               )}
-              <div className="flex items-center space-x-2 pl-3 border-l border-slate-700">
-                <span className="text-xs text-slate-500 hidden sm:block">{user?.email}</span>
+              <div className="flex items-center space-x-2 pl-3 border-l border-neutral-200">
+                <span className="text-xs text-neutral-400 hidden sm:block">{user?.email}</span>
                 {(userRole === 'superadmin' || userRole === 'admin') && (
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${userRole === 'superadmin' ? 'bg-red-600/30 text-red-300' : 'bg-indigo-600/30 text-indigo-300'}`}>
+                  <span className={`px-2 py-0.5 text-xs font-bold ${userRole === 'superadmin' ? 'bg-[#F7414C] text-white' : 'bg-[#0037B1] text-white'}`}>
                     {userRole === 'superadmin' ? 'Super Admin' : 'Admin'}
                   </span>
                 )}
-                <button onClick={handleSignOut} className="p-2 text-slate-400 hover:text-white transition-colors" title="Sign Out">
+                <button onClick={handleSignOut} className="p-2 text-neutral-400 hover:text-black transition-colors" title="Sign Out">
                   <LogOut className="w-4 h-4" />
                 </button>
               </div>
@@ -245,8 +244,8 @@ export default function App() {
         </header>
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
           {error && (
-            <div className="mb-6 p-4 bg-red-900/50 border border-red-500/30 text-red-300 flex items-center rounded-lg shadow-lg">
-              <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0 text-red-400" />
+            <div className="mb-6 p-4 bg-[#F7414C]/10 border border-[#F7414C]/30 text-[#F7414C] flex items-center">
+              <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
               <span className="font-medium">{error}</span>
             </div>
           )}
@@ -259,9 +258,9 @@ export default function App() {
         <style dangerouslySetInnerHTML={{ __html: `
           .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 10px; }
           .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-          .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
-          input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+          .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+          input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
         `}} />
       </div>
       )}
@@ -575,30 +574,29 @@ function CohortSelectionPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto mt-16 text-center animate-in fade-in zoom-in-95 duration-500">
-      <div className="bg-gradient-to-br from-red-700/30 to-slate-800/50 p-10 rounded-2xl border border-red-600/50 shadow-2xl shadow-red-900/20 mb-12">
-        <Globe className="w-20 h-20 text-red-400 mx-auto mb-6" />
-        <h1 className="text-5xl font-extrabold text-white mb-4 leading-tight">Select Your Cohort</h1>
-        <p className="text-slate-300 text-lg max-w-3xl mx-auto leading-relaxed">
+    <div className="max-w-5xl mx-auto mt-16 text-center">
+      <div className="border border-black p-10 mb-12">
+        <h1 className="text-5xl font-black text-black mb-4 leading-tight tracking-tight">Select Your Cohort</h1>
+        <p className="text-neutral-500 text-lg max-w-3xl mx-auto leading-relaxed">
           Choose the specific program you are associated with.
         </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {cohorts.length === 0 ? (
-          <div className="col-span-full text-slate-400 text-lg">
+          <div className="col-span-full text-neutral-400 text-lg">
             No cohorts available. {userRole === 'superadmin' ? 'Create one from the Super Admin panel below.' : 'Please contact an administrator.'}
           </div>
         ) : (
           cohorts.map((cohort: any) => (
             <div key={cohort.id} onClick={() => handleSelectCohort(cohort.id)}
-              className="bg-slate-800/50 p-8 rounded-2xl border border-slate-700/50 hover:border-indigo-500/80 hover:bg-slate-800/80 transition-all text-left group cursor-pointer shadow-lg">
-              <div className="w-16 h-16 bg-slate-700 text-indigo-400 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                <Building className="w-8 h-8" />
+              className="border border-neutral-200 p-8 text-left group cursor-pointer hover:border-[#0037B1] transition-colors">
+              <div className="w-12 h-12 bg-[#0037B1] text-white flex items-center justify-center mb-4">
+                <Building className="w-6 h-6" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">{cohort.name}</h2>
-              <p className="text-slate-400">Time Zone: {cohort.timezone?.split('/')[1]?.replace('_', ' ')}</p>
+              <h2 className="text-2xl font-black text-black mb-2">{cohort.name}</h2>
+              <p className="text-neutral-500">Time Zone: {cohort.timezone?.split('/')[1]?.replace('_', ' ')}</p>
               {cohort.weekStartDate && (
-                <p className="text-slate-500 text-sm mt-1">Week starts: {formatSafeDate(cohort.weekStartDate, 'MMM d, yyyy', cohort.timezone)}</p>
+                <p className="text-neutral-400 text-sm mt-1">Week starts: {formatSafeDate(cohort.weekStartDate, 'MMM d, yyyy', cohort.timezone)}</p>
               )}
             </div>
           ))
@@ -606,12 +604,12 @@ function CohortSelectionPage() {
       </div>
       <div className="mt-12 flex justify-center gap-4 flex-wrap">
         {(userRole === 'superadmin' || userRole === 'admin') && (
-          <button onClick={() => { setView('admin'); setError(null); }} className="text-indigo-400 hover:text-white underline decoration-indigo-600 transition-colors">
+          <button onClick={() => { setView('admin'); setError(null); }} className="text-[#0037B1] hover:underline font-bold transition-colors">
             Access Admin Dashboard
           </button>
         )}
         {userRole === 'superadmin' && (
-          <button onClick={() => { setView('superadmin'); setError(null); }} className="text-red-400 hover:text-white underline decoration-red-600 transition-colors flex items-center">
+          <button onClick={() => { setView('superadmin'); setError(null); }} className="text-[#F7414C] hover:underline font-bold transition-colors flex items-center">
             <Shield className="w-4 h-4 mr-1.5" /> Super Admin Panel
           </button>
         )}
@@ -623,35 +621,34 @@ function CohortSelectionPage() {
 function RoleSelectionPage() {
   const { setView, currentCohortSettings, userRole } = useContext(AppContext);
 
-  if (!currentCohortSettings) return <div className="text-center py-20 text-slate-400">Loading cohort details...</div>;
+  if (!currentCohortSettings) return <div className="text-center py-20 text-neutral-400">Loading cohort details...</div>;
 
   return (
-    <div className="max-w-5xl mx-auto mt-16 text-center animate-in fade-in zoom-in-95 duration-500">
-      <div className="bg-gradient-to-br from-red-700/30 to-slate-800/50 p-10 rounded-2xl border border-red-600/50 shadow-2xl shadow-red-900/20 mb-12">
-        <GraduationCap className="w-20 h-20 text-red-400 mx-auto mb-6" />
-        <h1 className="text-5xl font-extrabold text-white mb-4">{currentCohortSettings.name}</h1>
-        <h2 className="text-3xl font-semibold text-red-200 mb-6">Preceptor & Startup Matchmaking Platform</h2>
-        <p className="text-slate-300 text-lg max-w-3xl mx-auto">
+    <div className="max-w-5xl mx-auto mt-16 text-center">
+      <div className="border border-black p-10 mb-12">
+        <h1 className="text-5xl font-black text-black mb-4 tracking-tight">{currentCohortSettings.name}</h1>
+        <h2 className="text-2xl font-bold text-[#0037B1] mb-6">Preceptor & Startup Matchmaking</h2>
+        <p className="text-neutral-500 text-lg max-w-3xl mx-auto">
           Welcome to {currentCohortSettings.name}. Please select your role to proceed.
         </p>
       </div>
-      <div className={`grid grid-cols-1 ${(userRole === 'superadmin' || userRole === 'admin') ? 'md:grid-cols-2' : 'max-w-md mx-auto'} gap-8`}>
+      <div className={`grid grid-cols-1 ${(userRole === 'superadmin' || userRole === 'admin') ? 'md:grid-cols-2' : 'max-w-md mx-auto'} gap-6`}>
         <div onClick={() => setView('survey')}
-          className="bg-slate-800/50 p-10 rounded-2xl border border-slate-700/50 hover:border-indigo-500/80 hover:bg-slate-800/80 transition-all text-left group cursor-pointer shadow-lg">
-          <div className="w-16 h-16 bg-slate-700 text-indigo-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-            <User className="w-8 h-8" />
+          className="border border-neutral-200 p-10 text-left group cursor-pointer hover:border-[#0037B1] transition-colors">
+          <div className="w-12 h-12 bg-[#0037B1] text-white flex items-center justify-center mb-6">
+            <User className="w-6 h-6" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">I am a Preceptor</h2>
-          <p className="text-slate-400">Submit or update your availability to mentor startups.</p>
+          <h2 className="text-2xl font-black text-black mb-2">I am a Preceptor</h2>
+          <p className="text-neutral-500">Submit or update your availability to mentor startups.</p>
         </div>
         {(userRole === 'superadmin' || userRole === 'admin') && (
           <div onClick={() => setView('admin')}
-            className="bg-slate-800/50 p-10 rounded-2xl border border-slate-700/50 hover:border-emerald-500/80 hover:bg-slate-800/80 transition-all text-left group cursor-pointer shadow-lg">
-            <div className="w-16 h-16 bg-slate-700 text-emerald-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <Briefcase className="w-8 h-8" />
+            className="border border-neutral-200 p-10 text-left group cursor-pointer hover:border-[#01772c] transition-colors">
+            <div className="w-12 h-12 bg-[#01772c] text-white flex items-center justify-center mb-6">
+              <Briefcase className="w-6 h-6" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">I am an Administrator</h2>
-            <p className="text-slate-400">Manage startup assignments, preceptor schedules, and generate meeting invites.</p>
+            <h2 className="text-2xl font-black text-black mb-2">I am an Administrator</h2>
+            <p className="text-neutral-500">Manage startup assignments, preceptor schedules, and generate meeting invites.</p>
           </div>
         )}
       </div>
@@ -821,45 +818,45 @@ function SuperAdminView() {
   );
 
   return (
-    <div className="max-w-5xl mx-auto space-y-10 animate-in fade-in zoom-in-95 duration-500">
-      <div className="bg-gradient-to-br from-red-700/30 to-slate-800/50 p-10 rounded-2xl border border-red-600/50 shadow-2xl shadow-red-900/20">
-        <div className="flex items-center space-x-4 mb-6">
-          <Shield className="w-12 h-12 text-red-400" />
+    <div className="max-w-5xl mx-auto space-y-10">
+      <div className="border border-black p-10">
+        <div className="flex items-center space-x-4 mb-2">
+          <Shield className="w-10 h-10 text-[#F7414C]" />
           <div>
-            <h1 className="text-4xl font-extrabold text-white">Super Admin Panel</h1>
-            <p className="text-slate-300">Manage users, roles, and cohorts</p>
+            <h1 className="text-4xl font-black text-black tracking-tight">Super Admin Panel</h1>
+            <p className="text-neutral-500">Manage users, roles, and cohorts</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 shadow-2xl">
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-          <Building className="w-6 h-6 mr-3 text-indigo-400" /> Cohort Management
+      <div className="border border-neutral-200 p-8">
+        <h2 className="text-2xl font-black text-black mb-6 flex items-center">
+          <Building className="w-6 h-6 mr-3 text-[#0037B1]" /> Cohort Management
         </h2>
         <form onSubmit={handleCreateCohort} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <input type="text" value={newCohortName} onChange={e => setNewCohortName(e.target.value)}
-            placeholder="Cohort Name (e.g. MBC 2025)"
-            className="bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-indigo-500" />
+            placeholder="Cohort Name"
+            className="border border-neutral-300 p-3 text-black outline-none focus:border-[#0037B1] transition-colors" />
           <select value={newCohortTimezone} onChange={e => setNewCohortTimezone(e.target.value)}
-            className="bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-indigo-500">
+            className="border border-neutral-300 p-3 text-black outline-none focus:border-[#0037B1]">
             {TIMEZONES.map(tz => <option key={tz.value} value={tz.value}>{tz.label}</option>)}
           </select>
           <input type="date" value={newCohortStartDate} onChange={e => setNewCohortStartDate(e.target.value)}
-            className="bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-indigo-500" />
+            className="border border-neutral-300 p-3 text-black outline-none focus:border-[#0037B1]" />
           <button type="submit" disabled={loading}
-            className="bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-500 transition-colors disabled:opacity-50 flex items-center justify-center">
+            className="bg-[#0037B1] text-white font-bold hover:bg-[#002a8a] transition-colors disabled:opacity-50 flex items-center justify-center">
             <Plus className="w-4 h-4 mr-2" /> Create Cohort
           </button>
         </form>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {cohorts.map((c: any) => (
-            <div key={c.id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-4 flex justify-between items-start">
+            <div key={c.id} className="border border-neutral-200 p-4 flex justify-between items-start">
               <div>
-                <h3 className="text-white font-bold">{c.name}</h3>
-                <p className="text-slate-400 text-xs">{c.timezone}</p>
-                {c.weekStartDate && <p className="text-slate-500 text-xs">Start: {formatSafeDate(c.weekStartDate, 'MMM d, yyyy', c.timezone)}</p>}
+                <h3 className="text-black font-bold">{c.name}</h3>
+                <p className="text-neutral-400 text-xs">{c.timezone}</p>
+                {c.weekStartDate && <p className="text-neutral-400 text-xs">Start: {formatSafeDate(c.weekStartDate, 'MMM d, yyyy', c.timezone)}</p>}
               </div>
-              <button onClick={() => handleDeleteCohort(c.id)} className="text-slate-400 hover:text-red-400 p-1">
+              <button onClick={() => handleDeleteCohort(c.id)} className="text-neutral-300 hover:text-[#F7414C] p-1">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -867,22 +864,22 @@ function SuperAdminView() {
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 shadow-2xl">
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-          <Users className="w-6 h-6 mr-3 text-indigo-400" /> User Management
+      <div className="border border-neutral-200 p-8">
+        <h2 className="text-2xl font-black text-black mb-6 flex items-center">
+          <Users className="w-6 h-6 mr-3 text-[#0037B1]" /> User Management
         </h2>
         <input type="text" value={searchEmail} onChange={e => setSearchEmail(e.target.value)}
           placeholder="Search by email..."
-          className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-indigo-500 mb-6" />
+          className="w-full border border-neutral-300 p-3 text-black outline-none focus:border-[#0037B1] mb-6" />
         <div className="space-y-3 max-h-[50vh] overflow-y-auto custom-scrollbar">
           {filteredUsers.map((u: any) => (
-            <div key={u.id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-4 flex items-center justify-between">
+            <div key={u.id} className="border border-neutral-200 p-4 flex items-center justify-between">
               <div>
-                <p className="text-white font-semibold">{u.email}</p>
-                <p className="text-slate-500 text-xs">{u.displayName || 'No display name'}</p>
+                <p className="text-black font-semibold">{u.email}</p>
+                <p className="text-neutral-400 text-xs">{u.displayName || 'No display name'}</p>
               </div>
               <select value={u.role || 'preceptor'} onChange={e => handleRoleChange(u.id, e.target.value)}
-                className="bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-500">
+                className="border border-neutral-300 px-3 py-2 text-sm text-black outline-none focus:border-[#0037B1]">
                 <option value="preceptor">Preceptor</option>
                 <option value="admin">Admin</option>
                 <option value="superadmin">Super Admin</option>
@@ -892,51 +889,51 @@ function SuperAdminView() {
         </div>
       </div>
 
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 shadow-2xl">
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-          <Mail className="w-6 h-6 mr-3 text-indigo-400" /> Invite Management
+      <div className="border border-neutral-200 p-8">
+        <h2 className="text-2xl font-black text-black mb-6 flex items-center">
+          <Mail className="w-6 h-6 mr-3 text-[#0037B1]" /> Invite Management
         </h2>
         <div className="flex flex-wrap gap-3 mb-8">
           <button onClick={() => openInviteModal('admin')}
-            className="flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-500 transition-colors">
+            className="flex items-center px-4 py-2 bg-[#0037B1] text-white text-sm font-bold hover:bg-[#002a8a] transition-colors">
             <UserPlus className="w-4 h-4 mr-2" /> Invite Admin
           </button>
           {cohorts.map((c: any) => (
             <button key={c.id} onClick={() => openInviteModal('preceptor', c.id, c.name)}
-              className="flex items-center px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-500 transition-colors">
+              className="flex items-center px-4 py-2 bg-[#01772c] text-white text-sm font-bold hover:bg-[#015f23] transition-colors">
               <UserPlus className="w-4 h-4 mr-2" /> Invite Preceptor to {c.name}
             </button>
           ))}
         </div>
-        <p className="text-slate-400 text-sm mb-4">
+        <p className="text-neutral-500 text-sm mb-4">
           Click a button above to generate a one-time invite link. Optionally enter an email to send the invite directly.
         </p>
         <div className="space-y-3 max-h-[40vh] overflow-y-auto custom-scrollbar">
-          {invites.length === 0 && <p className="text-slate-500 italic text-sm">No invites generated yet.</p>}
+          {invites.length === 0 && <p className="text-neutral-400 italic text-sm">No invites generated yet.</p>}
           {invites.map((inv: any) => (
-            <div key={inv.id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-4 flex items-center justify-between">
+            <div key={inv.id} className="border border-neutral-200 p-4 flex items-center justify-between">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${inv.role === 'admin' ? 'bg-indigo-600/30 text-indigo-300' : 'bg-emerald-600/30 text-emerald-300'}`}>
+                  <span className={`px-2 py-0.5 text-xs font-bold ${inv.role === 'admin' ? 'bg-[#0037B1] text-white' : 'bg-[#01772c] text-white'}`}>
                     {inv.role}
                   </span>
-                  {inv.cohortName && <span className="text-slate-400 text-xs">{inv.cohortName}</span>}
+                  {inv.cohortName && <span className="text-neutral-500 text-xs">{inv.cohortName}</span>}
                   {inv.used ? (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-600/30 text-slate-400">Used by {inv.usedBy}</span>
+                    <span className="px-2 py-0.5 text-xs font-bold bg-neutral-200 text-neutral-500">Used by {inv.usedBy}</span>
                   ) : (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-600/30 text-yellow-300">Pending</span>
+                    <span className="px-2 py-0.5 text-xs font-bold bg-[#FFDB01] text-black">Pending</span>
                   )}
                 </div>
-                <p className="text-slate-500 text-xs mt-1 truncate">Token: {inv.token}</p>
+                <p className="text-neutral-400 text-xs mt-1 truncate font-mono">Token: {inv.token}</p>
               </div>
               <div className="flex items-center space-x-2 ml-4">
                 {!inv.used && (
                   <button onClick={() => copyInviteLink(inv.token)}
-                    className="flex items-center px-3 py-1.5 bg-slate-700 text-white text-xs font-bold rounded-lg hover:bg-slate-600 transition-colors">
+                    className="flex items-center px-3 py-1.5 bg-neutral-100 border border-neutral-200 text-black text-xs font-bold hover:bg-neutral-200 transition-colors">
                     {copiedId === inv.token ? <><Check className="w-3 h-3 mr-1" /> Copied!</> : <><Copy className="w-3 h-3 mr-1" /> Copy Link</>}
                   </button>
                 )}
-                <button onClick={() => handleDeleteInvite(inv.id)} className="text-slate-400 hover:text-red-400 p-1">
+                <button onClick={() => handleDeleteInvite(inv.id)} className="text-neutral-300 hover:text-[#F7414C] p-1">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -946,30 +943,30 @@ function SuperAdminView() {
       </div>
 
       {inviteModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
-            <h3 className="text-xl font-bold text-white mb-2 flex items-center">
-              <UserPlus className="w-6 h-6 mr-2 text-indigo-400" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white border border-black p-8 w-full max-w-md">
+            <h3 className="text-xl font-black text-black mb-2 flex items-center">
+              <UserPlus className="w-6 h-6 mr-2 text-[#0037B1]" />
               {inviteModal.role === 'admin' ? 'Invite Admin' : `Invite Preceptor${inviteModal.cohortName ? ` to ${inviteModal.cohortName}` : ''}`}
             </h3>
-            <p className="text-slate-400 text-sm mb-6">
+            <p className="text-neutral-500 text-sm mb-6">
               The invite link will be copied to your clipboard. Optionally enter an email to send it directly.
             </p>
             <div className="space-y-4">
               <div>
-                <label className="block text-slate-300 text-sm font-semibold mb-1">Recipient Email (optional)</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Recipient Email (optional)</label>
                 <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
                   placeholder="person@example.com"
-                  className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white outline-none focus:ring-2 focus:ring-indigo-500" />
+                  className="w-full border-b-2 border-black bg-transparent py-3 text-black outline-none focus:border-[#0037B1] transition-colors placeholder:text-neutral-300" />
                 {!emailConfigured && inviteEmail.trim() && (
-                  <p className="text-amber-400 text-xs mt-1">SMTP not configured. Email won't be sent, but the link will still be copied.</p>
+                  <p className="text-[#F7414C] text-xs mt-1">SMTP not configured. Email won't be sent, but the link will still be copied.</p>
                 )}
               </div>
             </div>
             <div className="flex space-x-3 mt-6">
-              <button onClick={() => setInviteModal(null)} className="flex-1 px-4 py-3 bg-slate-700 text-white font-bold rounded-lg hover:bg-slate-600 transition-colors">Cancel</button>
+              <button onClick={() => setInviteModal(null)} className="flex-1 px-4 py-3 border border-neutral-300 text-black font-bold hover:bg-neutral-50 transition-colors">Cancel</button>
               <button onClick={handleCreateInvite} disabled={inviteSending}
-                className="flex-1 px-4 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-500 transition-colors disabled:opacity-50 flex items-center justify-center">
+                className="flex-1 px-4 py-3 bg-black text-white font-bold hover:bg-neutral-800 transition-colors disabled:opacity-50 flex items-center justify-center">
                 {inviteSending ? 'Creating...' : <><Mail className="w-4 h-4 mr-2" /> {inviteEmail.trim() ? 'Send & Copy Link' : 'Copy Link'}</>}
               </button>
             </div>
@@ -1026,38 +1023,38 @@ function SurveyView() {
     }
   };
 
-  if (!currentCohortSettings) return <div className="text-center py-20 text-slate-400">Loading cohort...</div>;
+  if (!currentCohortSettings) return <div className="text-center py-20 text-neutral-400">Loading cohort...</div>;
 
   const availableCount = Object.values(availability).reduce((total, daySlots) =>
     total + Object.values(daySlots).filter(Boolean).length, 0
   );
 
   return (
-    <div className="max-w-5xl mx-auto animate-in fade-in zoom-in-95 duration-500">
-      <div className="bg-gradient-to-br from-indigo-700/30 to-slate-800/50 p-8 rounded-2xl border border-indigo-600/50 shadow-2xl shadow-indigo-900/20 mb-8">
+    <div className="max-w-5xl mx-auto">
+      <div className="border border-black p-8 mb-8">
         <div className="flex items-center space-x-4 mb-4">
-          <Calendar className="w-10 h-10 text-indigo-400" />
+          <Calendar className="w-10 h-10 text-[#0037B1]" />
           <div>
-            <h1 className="text-3xl font-extrabold text-white">Preceptor Availability Survey</h1>
-            <p className="text-slate-300">{currentCohortSettings.name} — {currentCohortSettings.timezone?.split('/')[1]?.replace('_', ' ')}</p>
+            <h1 className="text-3xl font-black text-black tracking-tight">Preceptor Availability Survey</h1>
+            <p className="text-neutral-500">{currentCohortSettings.name} — {currentCohortSettings.timezone?.split('/')[1]?.replace('_', ' ')}</p>
           </div>
         </div>
         {currentCohortSettings.weekStartDate && (
-          <p className="text-slate-400 text-sm">
+          <p className="text-neutral-400 text-sm">
             Week of {formatSafeDate(currentCohortSettings.weekStartDate, 'MMM d, yyyy', currentCohortSettings.timezone)}
           </p>
         )}
       </div>
 
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 shadow-2xl mb-8">
+      <div className="border border-neutral-200 p-8 mb-8">
         <div className="mb-6">
-          <label className="block text-sm font-bold text-slate-300 mb-2">Your Full Name</label>
+          <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Your Full Name</label>
           <input type="text" value={name} onChange={e => setName(e.target.value)}
             placeholder="e.g. Dr. Jane Smith"
-            className="w-full max-w-md bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-indigo-500" />
+            className="w-full max-w-md border-b-2 border-black bg-transparent py-3 text-black outline-none focus:border-[#0037B1] transition-colors placeholder:text-neutral-300" />
         </div>
 
-        <p className="text-slate-300 font-semibold mb-4">
+        <p className="text-black font-bold mb-4">
           Select the time slots when you are available ({availableCount} selected):
         </p>
 
@@ -1065,23 +1062,23 @@ function SurveyView() {
           <table className="w-full text-sm border-collapse min-w-max">
             <thead>
               <tr>
-                <th className="p-3 text-left text-slate-400 font-bold bg-slate-900 rounded-tl-lg sticky left-0 z-10">Day</th>
+                <th className="p-3 text-left text-neutral-500 font-bold bg-neutral-50 sticky left-0 z-10 border border-neutral-200">Day</th>
                 {SURVEY_TIMES.map((time: string) => (
-                  <th key={time} className="p-3 text-center text-indigo-400 font-bold bg-slate-900 whitespace-nowrap">{time}</th>
+                  <th key={time} className="p-3 text-center text-[#0037B1] font-bold bg-neutral-50 whitespace-nowrap border border-neutral-200">{time}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {surveyDays.map((day: string) => (
-                <tr key={day} className="border-t border-slate-700">
-                  <td className="p-3 font-semibold text-white bg-slate-800/50 sticky left-0 z-10 whitespace-nowrap">{day}</td>
+                <tr key={day}>
+                  <td className="p-3 font-bold text-black bg-white sticky left-0 z-10 whitespace-nowrap border border-neutral-200">{day}</td>
                   {SURVEY_TIMES.map((time: string) => {
                     const isSelected = availability[day]?.[time];
                     return (
-                      <td key={time} className="p-1.5 text-center">
+                      <td key={time} className="p-1.5 text-center border border-neutral-200">
                         <button onClick={() => toggleSlot(day, time)}
-                          className={`w-full h-10 rounded-md flex items-center justify-center transition-all ${
-                            isSelected ? 'bg-emerald-500 text-white' : 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-500'
+                          className={`w-full h-10 flex items-center justify-center transition-all ${
+                            isSelected ? 'bg-[#01772c] text-white' : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-300'
                           }`}>
                           {isSelected ? <Check className="w-5 h-5" strokeWidth={3} /> : <span>-</span>}
                         </button>
@@ -1098,13 +1095,13 @@ function SurveyView() {
       <div className="flex items-center justify-between">
         <div>
           {submitted && (
-            <span className="text-emerald-400 font-semibold flex items-center">
+            <span className="text-[#01772c] font-bold flex items-center">
               <Check className="w-5 h-5 mr-2" /> Your availability has been saved
             </span>
           )}
         </div>
         <button onClick={handleSubmit} disabled={loading}
-          className="px-8 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-500/20 disabled:opacity-50 flex items-center">
+          className="px-8 py-3 bg-black text-white font-bold text-sm uppercase tracking-wider hover:bg-neutral-800 transition-colors disabled:opacity-50 flex items-center">
           <Send className="w-5 h-5 mr-2" />
           {loading ? 'Saving...' : existingSubmission ? 'Update Availability' : 'Submit Availability'}
         </button>
@@ -1435,98 +1432,98 @@ function AdminView() {
     }
   };
 
-  if (!currentCohortSettings) return <div className="text-center py-20 text-slate-400">Select a cohort first.</div>;
+  if (!currentCohortSettings) return <div className="text-center py-20 text-neutral-400">Select a cohort first.</div>;
 
   return (
-    <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold text-white">Admin Dashboard</h1>
-          <p className="text-slate-400">{currentCohortSettings.name} — {submissions.length} preceptors submitted</p>
+          <h1 className="text-3xl font-black text-black tracking-tight">Admin Dashboard</h1>
+          <p className="text-neutral-500">{currentCohortSettings.name} — {submissions.length} preceptors submitted</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button onClick={() => { setAdminInviteEmail(''); setAdminInviteModal(true); }}
-            className="flex items-center px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-500 transition-colors">
+            className="flex items-center px-4 py-2 bg-[#01772c] text-white text-sm font-bold hover:bg-[#015f23] transition-colors">
             {inviteCopied ? <><Check className="w-4 h-4 mr-2" /> Link Copied!</> : <><UserPlus className="w-4 h-4 mr-2" /> Invite Preceptor</>}
           </button>
           <button onClick={() => setShowStartupManager(!showStartupManager)}
-            className="flex items-center px-4 py-2 bg-slate-700 text-white text-sm font-bold rounded-lg hover:bg-slate-600 transition-colors">
+            className="flex items-center px-4 py-2 border border-neutral-300 text-black text-sm font-bold hover:bg-neutral-50 transition-colors">
             <Building className="w-4 h-4 mr-2" /> Manage Startups
           </button>
           <button onClick={handleDownloadCSV}
-            className="flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-500 transition-colors">
+            className="flex items-center px-4 py-2 bg-[#0037B1] text-white text-sm font-bold hover:bg-[#002a8a] transition-colors">
             <Download className="w-4 h-4 mr-2" /> Download CSV
           </button>
           <button onClick={handlePrintSchedule}
-            className="flex items-center px-4 py-2 bg-slate-700 text-white text-sm font-bold rounded-lg hover:bg-slate-600 transition-colors">
+            className="flex items-center px-4 py-2 border border-neutral-300 text-black text-sm font-bold hover:bg-neutral-50 transition-colors">
             <Printer className="w-4 h-4 mr-2" /> Print Schedule
           </button>
         </div>
       </div>
 
       {showStartupManager && (
-        <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-2xl animate-in slide-in-from-top-4 duration-300">
+        <div className="border border-neutral-200 p-6">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-white font-bold flex items-center"><Building className="w-5 h-5 mr-2 text-indigo-400" /> {currentCohortSettings.name} Startups</h3>
+            <h3 className="text-black font-black flex items-center"><Building className="w-5 h-5 mr-2 text-[#0037B1]" /> {currentCohortSettings.name} Startups</h3>
             <div className="flex space-x-2">
-              <button onClick={() => setStartupModal('create')} className="flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-500 transition-colors">
+              <button onClick={() => setStartupModal('create')} className="flex items-center px-4 py-2 bg-[#0037B1] text-white text-sm font-bold hover:bg-[#002a8a] transition-colors">
                 <Plus className="w-4 h-4 mr-1" /> Add Startup
               </button>
-              <button onClick={() => setShowStartupManager(false)} className="text-slate-400 hover:text-white p-2"><X className="w-5 h-5" /></button>
+              <button onClick={() => setShowStartupManager(false)} className="text-neutral-400 hover:text-black p-2"><X className="w-5 h-5" /></button>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {startups.map((s: any) => (
-              <div key={s.id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
+              <div key={s.id} className="border border-neutral-200 p-4">
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="text-white font-bold">{s.name}</h4>
+                  <h4 className="text-black font-bold">{s.name}</h4>
                   <div className="flex space-x-1">
-                    <button onClick={() => setStartupModal(s)} className="text-slate-400 hover:text-indigo-400 p-1"><Settings className="w-4 h-4" /></button>
-                    <button onClick={() => handleDeleteStartup(s.id)} className="text-slate-400 hover:text-red-400 p-1"><X className="w-4 h-4" /></button>
+                    <button onClick={() => setStartupModal(s)} className="text-neutral-400 hover:text-[#0037B1] p-1"><Settings className="w-4 h-4" /></button>
+                    <button onClick={() => handleDeleteStartup(s.id)} className="text-neutral-400 hover:text-[#F7414C] p-1"><X className="w-4 h-4" /></button>
                   </div>
                 </div>
-                <p className="text-indigo-300 text-xs font-semibold mb-1">{s.industry}{s.stage ? ` • ${s.stage}` : ''}</p>
-                <p className="text-slate-400 text-xs line-clamp-2">{s.description}</p>
-                {s.founders && <p className="text-slate-500 text-xs mt-1">Founders: {s.founders}</p>}
+                <p className="text-[#0037B1] text-xs font-bold mb-1">{s.industry}{s.stage ? ` • ${s.stage}` : ''}</p>
+                <p className="text-neutral-500 text-xs line-clamp-2">{s.description}</p>
+                {s.founders && <p className="text-neutral-400 text-xs mt-1">Founders: {s.founders}</p>}
               </div>
             ))}
-            {startups.length === 0 && <p className="col-span-full text-slate-500 italic text-sm">No startups added yet. Click "Add Startup" to create profiles.</p>}
+            {startups.length === 0 && <p className="col-span-full text-neutral-400 italic text-sm">No startups added yet. Click "Add Startup" to create profiles.</p>}
           </div>
         </div>
       )}
 
-      <div className="bg-slate-800/50 rounded-xl shadow-2xl border border-slate-700/50 overflow-hidden">
+      <div className="border border-neutral-200 overflow-hidden">
         <div className="overflow-auto max-h-[70vh] custom-scrollbar">
           <table className="w-full text-sm text-left border-collapse min-w-max">
-            <thead className="text-xs text-slate-300 uppercase bg-slate-800 sticky top-0 z-30 shadow-md">
+            <thead className="text-xs text-neutral-500 uppercase bg-neutral-50 sticky top-0 z-30">
               <tr>
-                <th className="p-4 bg-slate-800 border-r border-b border-slate-700 sticky left-0 z-40 w-64">Preceptor Name</th>
+                <th className="p-4 bg-neutral-50 border-r border-b border-neutral-200 sticky left-0 z-40 w-64 font-bold text-black">Preceptor Name</th>
                 {surveyDays.map((day: string) => (
-                  <th key={day} colSpan={SURVEY_TIMES.length} className="p-2 text-center border-b border-r border-slate-700 font-bold text-white bg-slate-800/90">{day}</th>
+                  <th key={day} colSpan={SURVEY_TIMES.length} className="p-2 text-center border-b border-r border-neutral-200 font-bold text-black bg-neutral-50">{day}</th>
                 ))}
               </tr>
               <tr>
-                <th className="p-3 bg-slate-800 border-r border-b border-slate-700 sticky left-0 z-40 w-64"></th>
+                <th className="p-3 bg-neutral-50 border-r border-b border-neutral-200 sticky left-0 z-40 w-64"></th>
                 {surveyDays.map((day: string) => SURVEY_TIMES.map((time: string, idx: number) => {
                   const slotKey = `${day}|${time}`;
                   const assignment = slotAssignments[slotKey] || {};
                   const assignedStartup = startups.find((s: any) => String(s.id) === String(assignment.startupId));
                   return (
-                    <th key={`${day}-${time}`} className={`p-3 text-center border-b border-slate-700 font-semibold whitespace-nowrap min-w-[150px] ${idx === SURVEY_TIMES.length - 1 ? 'border-r' : ''}`}>
+                    <th key={`${day}-${time}`} className={`p-3 text-center border-b border-neutral-200 font-semibold whitespace-nowrap min-w-[150px] ${idx === SURVEY_TIMES.length - 1 ? 'border-r' : ''}`}>
                       <div className="flex flex-col space-y-2">
-                        <span className="text-indigo-400">{time}</span>
+                        <span className="text-[#0037B1] font-bold">{time}</span>
                         <select value={assignment.startupId || ''} onChange={e => updateSlotAssignment(day, time, 'startupId', e.target.value)}
-                          className="bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[10px] text-white outline-none focus:ring-1 focus:ring-indigo-500">
+                          className="border border-neutral-300 px-1 py-0.5 text-[10px] text-black outline-none focus:border-[#0037B1]">
                           <option value="">Select Startup</option>
                           {startups.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
                         </select>
                         {assignedStartup && (
-                          <button onClick={() => setProfileCard(assignedStartup)} className="text-[10px] text-indigo-300 hover:text-indigo-100 underline truncate max-w-full">
+                          <button onClick={() => setProfileCard(assignedStartup)} className="text-[10px] text-[#0037B1] hover:underline truncate max-w-full">
                             View Profile
                           </button>
                         )}
                         <button onClick={() => setZoomModal({ day, time, link: assignment.zoom || '' })}
-                          className={`flex items-center justify-center py-1 rounded text-[10px] transition-colors ${assignment.zoom ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/50' : 'bg-slate-700/50 text-slate-400 border border-slate-600/50 hover:bg-slate-600'}`}>
+                          className={`flex items-center justify-center py-1 text-[10px] transition-colors ${assignment.zoom ? 'bg-[#0037B1]/10 text-[#0037B1] border border-[#0037B1]/30' : 'bg-neutral-50 text-neutral-400 border border-neutral-200 hover:bg-neutral-100'}`}>
                           <LinkIcon className="w-3 h-3 mr-1" /> {assignment.zoom ? 'Link Added' : 'Add Zoom'}
                         </button>
                       </div>
@@ -1535,17 +1532,17 @@ function AdminView() {
                 }))}
               </tr>
             </thead>
-            <tbody className="bg-slate-800/50">
+            <tbody>
               {submissions.map((sub: any) => (
-                <tr key={sub.id} className="border-b border-slate-800 hover:bg-slate-700/20 transition-colors">
-                  <td className="p-4 font-semibold text-white border-r border-slate-700 sticky left-0 z-20 bg-slate-800/50 backdrop-blur-sm">{sub.name}</td>
+                <tr key={sub.id} className="border-b border-neutral-100 hover:bg-neutral-50/50 transition-colors">
+                  <td className="p-4 font-bold text-black border-r border-neutral-200 sticky left-0 z-20 bg-white">{sub.name}</td>
                   {surveyDays.map((day: string) => SURVEY_TIMES.map((time: string, idx: number) => {
                     const isAvailable = (sub.availability as any)?.[day]?.[time];
                     const isSelected = selections[`${sub.name}|${day}|${time}`];
                     return (
                       <td key={`${day}-${time}`} onClick={() => isAvailable && toggleSelection(sub.name, day, time)}
-                        className={`p-1.5 text-center transition-colors ${idx === SURVEY_TIMES.length - 1 ? 'border-r' : ''} border-slate-700 ${isAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
-                        <div className={`w-full h-10 rounded-md flex items-center justify-center transition-all ${isSelected ? 'bg-emerald-500 text-white' : isAvailable ? 'bg-slate-700/50 hover:bg-slate-600/50 text-emerald-400' : 'bg-slate-800/20'}`}>
+                        className={`p-1.5 text-center transition-colors ${idx === SURVEY_TIMES.length - 1 ? 'border-r' : ''} border-neutral-200 ${isAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                        <div className={`w-full h-10 flex items-center justify-center transition-all ${isSelected ? 'bg-[#01772c] text-white' : isAvailable ? 'bg-neutral-50 hover:bg-neutral-100 text-[#01772c]' : 'bg-white'}`}>
                           {isSelected ? (() => {
                             const slotKey2 = `${day}|${time}`;
                             const assign2 = slotAssignments[slotKey2] || {};
@@ -1555,20 +1552,20 @@ function AdminView() {
                             return (
                               <div className="flex items-center space-x-1">
                                 <Star className="w-3 h-3" fill="currentColor" />
-                                <button onClick={e => { e.stopPropagation(); handleGenerateICS(sub.name, day, time); }} className="text-white hover:text-indigo-300" title="Download calendar invite">
+                                <button onClick={e => { e.stopPropagation(); handleGenerateICS(sub.name, day, time); }} className="text-white hover:text-[#FFDB01]" title="Download calendar invite">
                                   <CalendarPlus className="w-4 h-4" />
                                 </button>
                                 {hasStartup2 && emailConfigured && (
                                   <button onClick={e => { e.stopPropagation(); handleNotifyPreceptor(sub.name, day, time); }}
                                     disabled={nStatus === 'sending'}
-                                    className={`transition-colors ${nStatus === 'sent' ? 'text-emerald-300' : nStatus === 'error' ? 'text-red-300' : 'text-white hover:text-amber-300'}`}
+                                    className={`transition-colors ${nStatus === 'sent' ? 'text-[#FFDB01]' : nStatus === 'error' ? 'text-[#F7414C]' : 'text-white hover:text-[#FFDB01]'}`}
                                     title={nStatus === 'sent' ? 'Notification sent!' : nStatus === 'error' ? 'Failed to send' : 'Email notification to preceptor'}>
                                     <Mail className="w-4 h-4" />
                                   </button>
                                 )}
                               </div>
                             );
-                          })() : isAvailable ? <Check className="w-5 h-5" strokeWidth={3} /> : <span className="text-slate-600">-</span>}
+                          })() : isAvailable ? <Check className="w-5 h-5" strokeWidth={3} /> : <span className="text-neutral-200">-</span>}
                         </div>
                       </td>
                     );
@@ -1576,7 +1573,7 @@ function AdminView() {
                 </tr>
               ))}
               {submissions.length === 0 && (
-                <tr><td colSpan={surveyDays.length * SURVEY_TIMES.length + 1} className="p-8 text-center text-slate-500 italic">No preceptors have submitted availability yet.</td></tr>
+                <tr><td colSpan={surveyDays.length * SURVEY_TIMES.length + 1} className="p-8 text-center text-neutral-400 italic">No preceptors have submitted availability yet.</td></tr>
               )}
             </tbody>
           </table>
@@ -1584,16 +1581,16 @@ function AdminView() {
       </div>
 
       {zoomModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
-            <h3 className="text-xl font-bold text-white mb-2 flex items-center"><LinkIcon className="w-6 h-6 mr-2 text-indigo-400" /> Add Zoom Link</h3>
-            <p className="text-slate-400 text-sm mb-6">For {zoomModal.day} at {zoomModal.time}</p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white border border-black p-8 w-full max-w-md">
+            <h3 className="text-xl font-black text-black mb-2 flex items-center"><LinkIcon className="w-6 h-6 mr-2 text-[#0037B1]" /> Add Zoom Link</h3>
+            <p className="text-neutral-500 text-sm mb-6">For {zoomModal.day} at {zoomModal.time}</p>
             <input type="url" autoFocus value={zoomModal.link} onChange={(e: any) => setZoomModal({ ...zoomModal, link: e.target.value })}
-              placeholder="https://zoom.us/j/..." className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white outline-none focus:ring-2 focus:ring-indigo-500 mb-6" />
+              placeholder="https://zoom.us/j/..." className="w-full border-b-2 border-black bg-transparent py-3 text-black outline-none focus:border-[#0037B1] transition-colors placeholder:text-neutral-300 mb-6" />
             <div className="flex space-x-3">
-              <button onClick={() => setZoomModal(null)} className="flex-1 px-4 py-3 bg-slate-700 text-white font-bold rounded-lg hover:bg-slate-600 transition-colors">Cancel</button>
+              <button onClick={() => setZoomModal(null)} className="flex-1 px-4 py-3 border border-neutral-300 text-black font-bold hover:bg-neutral-50 transition-colors">Cancel</button>
               <button onClick={() => { updateSlotAssignment(zoomModal.day, zoomModal.time, 'zoom', zoomModal.link); setZoomModal(null); }}
-                className="flex-1 px-4 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-500 transition-colors">Save Link</button>
+                className="flex-1 px-4 py-3 bg-black text-white font-bold hover:bg-neutral-800 transition-colors">Save Link</button>
             </div>
           </div>
         </div>
@@ -1608,45 +1605,45 @@ function AdminView() {
       )}
 
       {profileCard && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setProfileCard(null)}>
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200" onClick={(e: any) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4" onClick={() => setProfileCard(null)}>
+          <div className="bg-white border border-black p-8 w-full max-w-md" onClick={(e: any) => e.stopPropagation()}>
             <div className="flex justify-between items-start mb-4">
-              <div className="w-12 h-12 bg-indigo-600/20 text-indigo-400 rounded-xl flex items-center justify-center"><Building className="w-6 h-6" /></div>
-              <button onClick={() => setProfileCard(null)} className="text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
+              <div className="w-12 h-12 bg-[#0037B1] text-white flex items-center justify-center"><Building className="w-6 h-6" /></div>
+              <button onClick={() => setProfileCard(null)} className="text-neutral-400 hover:text-black"><X className="w-5 h-5" /></button>
             </div>
-            <h3 className="text-2xl font-bold text-white mb-1">{profileCard.name}</h3>
+            <h3 className="text-2xl font-black text-black mb-1">{profileCard.name}</h3>
             <div className="flex space-x-2 mb-4">
-              {profileCard.industry && <span className="px-2 py-0.5 bg-indigo-600/20 text-indigo-300 rounded-full text-xs font-bold">{profileCard.industry}</span>}
-              {profileCard.stage && <span className="px-2 py-0.5 bg-emerald-600/20 text-emerald-300 rounded-full text-xs font-bold">{profileCard.stage}</span>}
+              {profileCard.industry && <span className="px-2 py-0.5 bg-[#0037B1] text-white text-xs font-bold">{profileCard.industry}</span>}
+              {profileCard.stage && <span className="px-2 py-0.5 bg-[#01772c] text-white text-xs font-bold">{profileCard.stage}</span>}
             </div>
-            {profileCard.founders && <p className="text-slate-300 text-sm mb-2"><span className="font-bold text-slate-200">Founders:</span> {profileCard.founders}</p>}
-            {profileCard.description && <p className="text-slate-400 text-sm mb-4">{profileCard.description}</p>}
+            {profileCard.founders && <p className="text-neutral-600 text-sm mb-2"><span className="font-bold text-black">Founders:</span> {profileCard.founders}</p>}
+            {profileCard.description && <p className="text-neutral-500 text-sm mb-4">{profileCard.description}</p>}
           </div>
         </div>
       )}
 
       {adminInviteModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
-            <h3 className="text-xl font-bold text-white mb-2 flex items-center">
-              <UserPlus className="w-6 h-6 mr-2 text-emerald-400" /> Invite Preceptor to {currentCohortSettings?.name}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white border border-black p-8 w-full max-w-md">
+            <h3 className="text-xl font-black text-black mb-2 flex items-center">
+              <UserPlus className="w-6 h-6 mr-2 text-[#01772c]" /> Invite Preceptor to {currentCohortSettings?.name}
             </h3>
-            <p className="text-slate-400 text-sm mb-6">
+            <p className="text-neutral-500 text-sm mb-6">
               The invite link will be copied to your clipboard. Optionally enter an email to send it directly.
             </p>
             <div>
-              <label className="block text-slate-300 text-sm font-semibold mb-1">Recipient Email (optional)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Recipient Email (optional)</label>
               <input type="email" value={adminInviteEmail} onChange={e => setAdminInviteEmail(e.target.value)}
                 placeholder="preceptor@example.com"
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white outline-none focus:ring-2 focus:ring-emerald-500" />
+                className="w-full border-b-2 border-black bg-transparent py-3 text-black outline-none focus:border-[#01772c] transition-colors placeholder:text-neutral-300" />
               {!emailConfigured && adminInviteEmail.trim() && (
-                <p className="text-amber-400 text-xs mt-1">SMTP not configured. Email won't be sent, but the link will still be copied.</p>
+                <p className="text-[#F7414C] text-xs mt-1">SMTP not configured. Email won't be sent, but the link will still be copied.</p>
               )}
             </div>
             <div className="flex space-x-3 mt-6">
-              <button onClick={() => setAdminInviteModal(false)} className="flex-1 px-4 py-3 bg-slate-700 text-white font-bold rounded-lg hover:bg-slate-600 transition-colors">Cancel</button>
+              <button onClick={() => setAdminInviteModal(false)} className="flex-1 px-4 py-3 border border-neutral-300 text-black font-bold hover:bg-neutral-50 transition-colors">Cancel</button>
               <button onClick={handleInvitePreceptor} disabled={adminInviteSending}
-                className="flex-1 px-4 py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-500 transition-colors disabled:opacity-50 flex items-center justify-center">
+                className="flex-1 px-4 py-3 bg-black text-white font-bold hover:bg-neutral-800 transition-colors disabled:opacity-50 flex items-center justify-center">
                 {adminInviteSending ? 'Creating...' : <><Mail className="w-4 h-4 mr-2" /> {adminInviteEmail.trim() ? 'Send & Copy Link' : 'Copy Link'}</>}
               </button>
             </div>
@@ -1675,36 +1672,36 @@ function StartupFormModal({ startup, onSave, onClose }: { startup: any; onSave: 
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
+      <div className="bg-white border border-black p-8 w-full max-w-lg">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold text-white">{startup ? 'Edit Startup' : 'Add Startup Profile'}</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-white"><X className="w-6 h-6" /></button>
+          <h3 className="text-xl font-black text-black">{startup ? 'Edit Startup' : 'Add Startup Profile'}</h3>
+          <button onClick={onClose} className="text-neutral-400 hover:text-black"><X className="w-6 h-6" /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="block text-sm font-bold text-slate-300 mb-1">Company Name <span className="text-red-400">*</span></label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Company Name <span className="text-[#F7414C]">*</span></label>
               <input type="text" required value={form.name} onChange={e => handleChange('name', e.target.value)}
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border-b-2 border-black bg-transparent py-3 text-black outline-none focus:border-[#0037B1] transition-colors placeholder:text-neutral-300"
                 placeholder="e.g. AgroTech Solutions" />
             </div>
             <div className="col-span-2">
-              <label className="block text-sm font-bold text-slate-300 mb-1">Founder Name(s)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Founder Name(s)</label>
               <input type="text" value={form.founders} onChange={e => handleChange('founders', e.target.value)}
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border-b-2 border-black bg-transparent py-3 text-black outline-none focus:border-[#0037B1] transition-colors placeholder:text-neutral-300"
                 placeholder="e.g. Jane Doe, John Smith" />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-300 mb-1">Industry</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Industry</label>
               <input type="text" value={form.industry} onChange={e => handleChange('industry', e.target.value)}
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border-b-2 border-black bg-transparent py-3 text-black outline-none focus:border-[#0037B1] transition-colors placeholder:text-neutral-300"
                 placeholder="e.g. FinTech" />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-300 mb-1">Stage</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Stage</label>
               <select value={form.stage} onChange={e => handleChange('stage', e.target.value)}
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-indigo-500">
+                className="w-full border border-neutral-300 p-3 text-black outline-none focus:border-[#0037B1]">
                 <option value="">Select stage</option>
                 <option value="Idea">Idea</option>
                 <option value="MVP">MVP</option>
@@ -1713,15 +1710,15 @@ function StartupFormModal({ startup, onSave, onClose }: { startup: any; onSave: 
               </select>
             </div>
             <div className="col-span-2">
-              <label className="block text-sm font-bold text-slate-300 mb-1">One-line Description</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">One-line Description</label>
               <input type="text" value={form.description} onChange={e => handleChange('description', e.target.value)}
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border-b-2 border-black bg-transparent py-3 text-black outline-none focus:border-[#0037B1] transition-colors placeholder:text-neutral-300"
                 placeholder="e.g. Connecting smallholder farmers to premium markets via mobile." />
             </div>
           </div>
           <div className="flex space-x-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-3 bg-slate-700 text-white font-bold rounded-lg hover:bg-slate-600 transition-colors">Cancel</button>
-            <button type="submit" className="flex-1 px-4 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-500 transition-colors">Save Startup</button>
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-3 border border-neutral-300 text-black font-bold hover:bg-neutral-50 transition-colors">Cancel</button>
+            <button type="submit" className="flex-1 px-4 py-3 bg-black text-white font-bold hover:bg-neutral-800 transition-colors">Save Startup</button>
           </div>
         </form>
       </div>
