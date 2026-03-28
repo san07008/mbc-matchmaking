@@ -1511,7 +1511,7 @@ function AdminView() {
             </thead>
             <tbody>
               {submissions.map((sub: any) => (
-                <tr key={sub.id} className="border-b border-[#E8E4DF]/60 hover:bg-[#F5F4F0]/60/50 transition-colors">
+                <tr key={sub.id} className="border-b border-[#E8E4DF]/60 hover:bg-[#F5F4F0]/60 transition-colors">
                   <td className="p-4 font-bold text-[#1A1A1A] border-r border-[#E8E4DF] sticky left-0 z-20 bg-white">{sub.name}</td>
                   {surveyDays.map((day: string) => SURVEY_TIMES.map((time: string, idx: number) => {
                     const isAvailable = (sub.availability as any)?.[day]?.[time];
