@@ -1176,6 +1176,17 @@ function AdminView() {
         method: 'PUT',
         body: JSON.stringify({ assignments: updated, selections }),
       });
+      if (field === 'startupId' && value && emailConfigured) {
+        const startup = startups.find((s: any) => String(s.id) === String(value));
+        if (startup) {
+          submissions.forEach((sub: any) => {
+            const selKey = `${sub.name}|${day}|${time}`;
+            if (selections[selKey]) {
+              handleNotifyPreceptor(sub.name, day, time);
+            }
+          });
+        }
+      }
     } catch (err: any) {
       setError(err.message);
     }
