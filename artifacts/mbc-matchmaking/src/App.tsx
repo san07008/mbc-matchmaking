@@ -1120,6 +1120,7 @@ function AdminView() {
     setNotifyStatus(prev => ({ ...prev, [notifyKey]: 'sending' }));
     try {
       const tIdx = SURVEY_TIMES.indexOf(time);
+      const dIdx = surveyDays.indexOf(day);
       await api(`/cohorts/${currentCohortId}/notify-assignment`, {
         method: 'POST',
         body: JSON.stringify({
@@ -1131,6 +1132,7 @@ function AdminView() {
           cohortName: currentCohortSettings.name,
           weekStartDate: currentCohortSettings.weekStartDate || null,
           timeIndex: tIdx >= 0 ? tIdx : undefined,
+          dayIndex: dIdx >= 0 ? dIdx : undefined,
         }),
       });
       setNotifyStatus(prev => ({ ...prev, [notifyKey]: 'sent' }));
@@ -1144,13 +1146,22 @@ function AdminView() {
 
   const toggleSelection = async (preceptorName: string, day: string, time: string) => {
     const key = `${preceptorName}|${day}|${time}`;
-    const newSelections = { ...selections, [key]: !selections[key] };
+    const isNowSelected = !selections[key];
+    const newSelections = { ...selections, [key]: isNowSelected };
     setSelections(newSelections);
     try {
       await api(`/cohorts/${currentCohortId}/slot-assignments`, {
         method: 'PUT',
         body: JSON.stringify({ selections: newSelections, assignments: slotAssignments }),
       });
+      if (isNowSelected && emailConfigured) {
+        const slotKey = `${day}|${time}`;
+        const assignment = slotAssignments[slotKey] || {};
+        const startup = startups.find((s: any) => String(s.id) === String(assignment.startupId));
+        if (startup) {
+          handleNotifyPreceptor(preceptorName, day, time);
+        }
+      }
     } catch (err: any) {
       setError(err.message);
     }

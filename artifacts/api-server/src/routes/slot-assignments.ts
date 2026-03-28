@@ -47,7 +47,7 @@ router.put("/cohorts/:cohortId/slot-assignments", authMiddleware, requireRole("s
 router.post("/cohorts/:cohortId/notify-assignment", authMiddleware, requireRole("superadmin", "admin"), async (req, res) => {
   try {
     const cohortId = parseInt(req.params.cohortId as string);
-    const { preceptorName, day, time, startupName, zoomLink, cohortName, weekStartDate, timeIndex } = req.body;
+    const { preceptorName, day, time, startupName, zoomLink, cohortName, weekStartDate, timeIndex, dayIndex } = req.body;
 
     if (!preceptorName || !day || !time || !startupName || !cohortName) {
       res.status(400).json({ error: "Missing required fields" });
@@ -84,14 +84,12 @@ router.post("/cohorts/:cohortId/notify-assignment", authMiddleware, requireRole(
 
     const attachments: Array<{ filename: string; content: string; contentType: string }> = [];
 
-    if (weekStartDate && timeIndex !== undefined) {
-      const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-      const dayIdx = dayNames.indexOf(day);
-      if (dayIdx >= 0) {
+    if (weekStartDate && timeIndex !== undefined && dayIndex !== undefined && dayIndex >= 0) {
+      {
         const [year, month, dayNum] = weekStartDate.split("-").map(Number);
         const startHour = timeIndex + 9;
-        const startDate = new Date(Date.UTC(year, month - 1, dayNum + dayIdx, startHour, 0, 0));
-        const endDate = new Date(Date.UTC(year, month - 1, dayNum + dayIdx, startHour + 1, 0, 0));
+        const startDate = new Date(Date.UTC(year, month - 1, dayNum + dayIndex, startHour, 0, 0));
+        const endDate = new Date(Date.UTC(year, month - 1, dayNum + dayIndex, startHour + 1, 0, 0));
 
         const icsContent = buildICSContent({
           title: `MBC Meeting: ${preceptorName} & ${startupName}`,
