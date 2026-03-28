@@ -12,8 +12,8 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **TypeScript version**: 5.9
 - **API framework**: Express 5
 - **Database**: PostgreSQL + Drizzle ORM
+- **Auth**: Session-based (bcrypt + HTTP-only cookies)
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
 
 ## Structure
@@ -53,31 +53,40 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 
 ### `artifacts/mbc-matchmaking` (`@workspace/mbc-matchmaking`)
 
-MBC Matchmaking Platform — a Firebase-powered React + Vite web app for the Master of Business Creation program. Features:
-- Firebase Authentication (email/password + Google sign-in)
-- Firestore database for all data (cohorts, submissions, startups, user roles, invites)
+MBC Matchmaking Platform — a React + Vite web app for the Master of Business Creation program. Features:
+- Session-based authentication (email/password via PostgreSQL + bcrypt)
+- PostgreSQL database for all data (users, cohorts, submissions, startups, invites, sessions, slot_assignments)
+- API calls via fetch() to `/api/*` routes (proxied to api-server in dev)
 - Multiple views: Login, Cohort Selection, Role Selection, Preceptor Survey, Admin Dashboard, Super Admin Panel
 - Role-based access: superadmin, admin, preceptor
-- **Invite system**: No public registration. Super admins generate admin invite links; admins generate preceptor invite links (scoped to a cohort). Invite tokens stored at `artifacts/mbc-matchmaking/public/data/invites/{token}` in Firestore. Each invite is one-time use and auto-assigns the correct role on registration.
-- Preceptor availability scheduling with time slot grid
+- **Invite system**: No public registration. Super admins generate admin invite links; admins generate preceptor invite links (scoped to a cohort). Each invite is one-time use and auto-assigns the correct role on registration.
+- Preceptor availability scheduling with time slot grid (8 hourly slots, 9 AM–4 PM, 5 weekdays)
 - Startup management (CRUD) with profile cards
-- Slot assignments with Zoom link management
+- Slot assignments with Zoom link management (max 3 preceptors per slot)
 - ICS calendar file generation for meetings
 - Dark slate theme with Tailwind CSS
-- Super admin email: configured via `VITE_SUPER_ADMIN_EMAIL` env var
-- All Firebase config via `VITE_FIREBASE_*` env vars
+- Super admin email: configured via `VITE_SUPER_ADMIN_EMAIL` env var (server-side)
+- All UI in single file: `src/App.tsx`
 
 ### `artifacts/api-server` (`@workspace/api-server`)
 
-Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` for request and response validation and `@workspace/db` for persistence.
+Express 5 API server with session-based auth. Routes live in `src/routes/`.
 
 - Entry: `src/index.ts` — reads `PORT`, starts Express
-- App setup: `src/app.ts` — mounts CORS, JSON/urlencoded parsing, routes at `/api`
-- Routes: `src/routes/index.ts` mounts sub-routers; `src/routes/health.ts` exposes `GET /health` (full path: `/api/health`)
-- Depends on: `@workspace/db`, `@workspace/api-zod`
+- App setup: `src/app.ts` — mounts CORS, cookie-parser, JSON/urlencoded parsing, routes at `/api`
+- Auth middleware: `src/middleware/auth.ts` — session cookie validation, role-based access control
+- Routes:
+  - `auth.ts` — POST /register, POST /login, GET /me, POST /logout
+  - `users.ts` — GET /users, PATCH /users/:id/role (superadmin only)
+  - `cohorts.ts` — GET /cohorts, POST /cohorts, DELETE /cohorts/:id
+  - `submissions.ts` — GET/POST /cohorts/:cohortId/submissions
+  - `startups.ts` — GET/POST/PUT/DELETE /cohorts/:cohortId/startups
+  - `invites.ts` — GET /invites, POST /invites, GET /invites/validate/:token, DELETE /invites/:id
+  - `slot-assignments.ts` — GET/PUT /cohorts/:cohortId/slot-assignments
+  - `health.ts` — GET /healthz
+- Depends on: `@workspace/db`
 - `pnpm --filter @workspace/api-server run dev` — run the dev server
-- `pnpm --filter @workspace/api-server run build` — production esbuild bundle (`dist/index.cjs`)
-- Build bundles an allowlist of deps (express, cors, pg, drizzle-orm, zod, etc.) and externalizes the rest
+- `pnpm --filter @workspace/api-server run build` — production esbuild bundle
 
 ### `lib/db` (`@workspace/db`)
 
@@ -85,7 +94,7 @@ Database layer using Drizzle ORM with PostgreSQL. Exports a Drizzle client insta
 
 - `src/index.ts` — creates a `Pool` + Drizzle instance, exports schema
 - `src/schema/index.ts` — barrel re-export of all models
-- `src/schema/<modelname>.ts` — table definitions with `drizzle-zod` insert schemas (no models definitions exist right now)
+- Schema tables: users, cohorts, submissions, startups, invites, sessions, slot_assignments
 - `drizzle.config.ts` — Drizzle Kit config (requires `DATABASE_URL`, automatically provided by Replit)
 - Exports: `.` (pool, db, schema), `./schema` (schema only)
 

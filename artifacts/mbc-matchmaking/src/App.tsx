@@ -1,64 +1,26 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import {
   Download, AlertCircle, Calendar, Check, Users,
   Send, User, Clock, ArrowLeft, ShieldAlert, Star, CalendarPlus, Link as LinkIcon, Plus, X, Building,
   GraduationCap, Briefcase, Settings, Globe, Rocket, LogOut, Shield, Eye, EyeOff, Copy, Mail, UserPlus, Trash2
 } from 'lucide-react';
-import { initializeApp } from 'firebase/app';
-import {
-  getAuth, onAuthStateChanged, signOut,
-  signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  GoogleAuthProvider, signInWithPopup
-} from 'firebase/auth';
-import {
-  getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp,
-  doc, updateDoc, getDocs, where, setDoc, deleteDoc, getDoc, runTransaction
-} from 'firebase/firestore';
-
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const googleProvider = new GoogleAuthProvider();
-
-const SUPER_ADMIN_EMAIL = import.meta.env.VITE_SUPER_ADMIN_EMAIL || 'superadmin@example.com';
-const APP_ID = 'mbc-matchmaking';
-
-const INVITES_PATH = ['artifacts', APP_ID, 'public', 'data', 'invites'] as const;
-
-const generateInviteToken = () => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const randomBytes = new Uint8Array(32);
-  crypto.getRandomValues(randomBytes);
-  let token = '';
-  for (let i = 0; i < 32; i++) token += chars.charAt(randomBytes[i] % chars.length);
-  return token;
-};
 
 const getBaseUrl = () => {
   return window.location.origin + window.location.pathname;
 };
 
-const AppContext = createContext<any>(null);
-
-const loadScript = (src: string) => {
-  return new Promise<void>((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-    const script = document.createElement('script');
-    script.src = src;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error(`Failed to load script ${src}`));
-    document.head.appendChild(script);
+async function api(path: string, opts: RequestInit = {}) {
+  const res = await fetch(`/api${path}`, {
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+    ...opts,
   });
-};
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+  return data;
+}
+
+const AppContext = createContext<any>(null);
 
 const formatICSDate = (date: Date) => date.toISOString().replace(/[-:]|\.\d{3}/g, '');
 
@@ -137,121 +99,70 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [view, setView] = useState('login');
   const [error, setError] = useState<string | null>(null);
-  const [currentCohortId, setCurrentCohortId] = useState<string | null>(null);
+  const [currentCohortId, setCurrentCohortId] = useState<number | null>(null);
   const [currentCohortSettings, setCurrentCohortSettings] = useState<any>(null);
   const [cohorts, setCohorts] = useState<any[]>([]);
   const [pendingInvite, setPendingInvite] = useState<any>(null);
+
+  const fetchCohorts = useCallback(async () => {
+    try {
+      const data = await api('/cohorts');
+      setCohorts(data);
+    } catch {}
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const inviteToken = params.get('invite');
     if (inviteToken) {
-      const inviteRef = doc(db, ...INVITES_PATH, inviteToken);
-      getDoc(inviteRef).then((snap) => {
-        if (snap.exists() && !snap.data().used) {
-          setPendingInvite({ id: snap.id, ...snap.data() });
+      api(`/invites/validate/${inviteToken}`).then((data) => {
+        if (data.valid) {
+          setPendingInvite({ token: inviteToken, role: data.role, cohortName: data.cohortName, cohortId: data.cohortId });
         }
-      });
+      }).catch(() => {});
     }
   }, []);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-      if (firebaseUser) {
-        try {
-          if (firebaseUser.email === SUPER_ADMIN_EMAIL) {
-            setUserRole('superadmin');
-            const userRef = doc(db, 'users', firebaseUser.uid);
-            await setDoc(userRef, { email: firebaseUser.email, role: 'superadmin', displayName: firebaseUser.displayName || '' }, { merge: true });
-            window.history.replaceState({}, '', window.location.pathname);
-            setView('cohortSelection');
-          } else {
-            const userRef = doc(db, 'users', firebaseUser.uid);
-            const userSnap = await getDoc(userRef);
-            if (userSnap.exists()) {
-              setUserRole(userSnap.data().role || 'preceptor');
-              window.history.replaceState({}, '', window.location.pathname);
-              setView('cohortSelection');
-            } else {
-              const params = new URLSearchParams(window.location.search);
-              const inviteToken = params.get('invite');
-              if (!inviteToken) {
-                await signOut(auth);
-                setError('No invite found. You need an invite link to create an account. Please ask your administrator for one.');
-                setAuthLoading(false);
-                return;
-              }
-              const inviteRef = doc(db, ...INVITES_PATH, inviteToken);
-              const result = await runTransaction(db, async (transaction) => {
-                const inviteSnap = await transaction.get(inviteRef);
-                if (!inviteSnap.exists()) throw new Error('This invite link is invalid.');
-                if (inviteSnap.data().used) throw new Error('This invite link has already been used.');
-                const inviteData = inviteSnap.data();
-                transaction.update(inviteRef, { used: true, usedBy: firebaseUser.email, usedAt: serverTimestamp() });
-                transaction.set(userRef, { email: firebaseUser.email, role: inviteData.role, displayName: firebaseUser.displayName || '' });
-                return { role: inviteData.role, cohortId: inviteData.cohortId || null };
-              });
-              setUserRole(result.role);
-              if (result.cohortId) {
-                setCurrentCohortId(result.cohortId);
-              }
-              setPendingInvite(null);
-              window.history.replaceState({}, '', window.location.pathname);
-              setView('cohortSelection');
-            }
-          }
-        } catch (err: any) {
-          const msg = err.message || String(err);
-          if (msg.includes('offline') || msg.includes('unavailable')) {
-            setError('Unable to connect to the database. Please check that Firestore is set up in your Firebase project and try again.');
-          } else {
-            setError(msg);
-          }
-          await signOut(auth);
-          setAuthLoading(false);
-          return;
-        }
-      } else {
-        setUserRole(null);
-        setView('login');
-      }
+    api('/auth/me').then((data) => {
+      setUser(data.user);
+      setUserRole(data.user.role);
+      window.history.replaceState({}, '', window.location.pathname);
+      setView('cohortSelection');
+      setAuthLoading(false);
+    }).catch(() => {
+      setUser(null);
+      setUserRole(null);
+      setView('login');
       setAuthLoading(false);
     });
-    return () => unsub();
   }, []);
 
   useEffect(() => {
     if (!user) return;
-    const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'cohorts'));
-    const unsub = onSnapshot(q, (snapshot) => {
-      const fetched = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      setCohorts(fetched.sort((a: any, b: any) => a.name.localeCompare(b.name)));
-    });
-    return () => unsub();
-  }, [user]);
+    fetchCohorts();
+  }, [user, fetchCohorts]);
 
   useEffect(() => {
     if (!currentCohortId || !user) { setCurrentCohortSettings(null); return; }
-    const cohortRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'cohorts', currentCohortId);
-    const unsub = onSnapshot(cohortRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setCurrentCohortSettings({ id: docSnap.id, ...docSnap.data() });
-      } else {
-        setCurrentCohortSettings(null);
-        setError(`Cohort ${currentCohortId} not found.`);
-      }
-    });
-    return () => unsub();
-  }, [currentCohortId, user]);
+    const cohort = cohorts.find((c: any) => c.id === currentCohortId);
+    if (cohort) {
+      setCurrentCohortSettings(cohort);
+    } else {
+      setCurrentCohortSettings(null);
+    }
+  }, [currentCohortId, user, cohorts]);
 
   useEffect(() => {
     if (!user || cohorts.length === 0) return;
     const params = new URLSearchParams(window.location.search);
     const cohortParam = params.get('cohort');
-    if (cohortParam && cohorts.some((c: any) => c.id === cohortParam)) {
-      setCurrentCohortId(cohortParam);
-      setView('survey');
+    if (cohortParam) {
+      const cid = parseInt(cohortParam);
+      if (cohorts.some((c: any) => c.id === cid)) {
+        setCurrentCohortId(cid);
+        setView('survey');
+      }
     }
   }, [cohorts, user]);
 
@@ -260,9 +171,12 @@ export default function App() {
     : [];
 
   const handleSignOut = async () => {
-    await signOut(auth);
+    await api('/auth/logout', { method: 'POST' });
+    setUser(null);
+    setUserRole(null);
     setCurrentCohortId(null);
     setCurrentCohortSettings(null);
+    setView('login');
   };
 
   if (authLoading) {
@@ -278,9 +192,9 @@ export default function App() {
 
   return (
     <AppContext.Provider value={{
-      user, userRole, error, setError, setView, db,
+      user, userRole, error, setError, setView,
       currentCohortId, setCurrentCohortId, currentCohortSettings,
-      cohorts, surveyDays, SURVEY_TIMES, handleSignOut, pendingInvite
+      cohorts, setCohorts, fetchCohorts, surveyDays, SURVEY_TIMES, handleSignOut, pendingInvite, setPendingInvite, setUser, setUserRole
     }}>
       <div className="min-h-screen bg-slate-900 text-slate-300 font-sans pb-20">
         {view !== 'login' && (
@@ -346,7 +260,7 @@ export default function App() {
 }
 
 function LoginPage() {
-  const { setError, pendingInvite } = useContext(AppContext);
+  const { setError, pendingInvite, setPendingInvite, setUser, setUserRole, setView, setCurrentCohortId } = useContext(AppContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -359,24 +273,28 @@ function LoginPage() {
     setLoading(true);
     try {
       if (isInvite) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const data = await api('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({ email, password, inviteToken: pendingInvite.token }),
+        });
+        setUser(data.user);
+        setUserRole(data.user.role);
+        if (data.cohortId) setCurrentCohortId(data.cohortId);
+        setPendingInvite(null);
+        window.history.replaceState({}, '', window.location.pathname);
+        setView('cohortSelection');
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        const data = await api('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password }),
+        });
+        setUser(data.user);
+        setUserRole(data.user.role);
+        window.history.replaceState({}, '', window.location.pathname);
+        setView('cohortSelection');
       }
     } catch (err: any) {
-      setError(err.message.replace('Firebase: ', ''));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (err: any) {
-      setError(err.message.replace('Firebase: ', ''));
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -404,24 +322,6 @@ function LoginPage() {
           )}
         </div>
         <div className="bg-slate-800 rounded-2xl border border-slate-700 p-8 shadow-2xl">
-          <button
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-            className="w-full flex items-center justify-center px-4 py-3 bg-white text-slate-800 font-bold rounded-lg hover:bg-slate-100 transition-colors mb-6 disabled:opacity-50"
-          >
-            <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            {isInvite ? 'Sign up with Google' : 'Continue with Google'}
-          </button>
-          <div className="flex items-center mb-6">
-            <div className="flex-1 border-t border-slate-600"></div>
-            <span className="mx-4 text-slate-500 text-sm">or</span>
-            <div className="flex-1 border-t border-slate-600"></div>
-          </div>
           <form onSubmit={handleEmailAuth} className="space-y-4">
             <div>
               <label className="block text-sm font-bold text-slate-300 mb-2">Email</label>
@@ -459,7 +359,7 @@ function LoginPage() {
 function CohortSelectionPage() {
   const { setView, setCurrentCohortId, cohorts, setError, userRole } = useContext(AppContext);
 
-  const handleSelectCohort = (cohortId: string) => {
+  const handleSelectCohort = (cohortId: number) => {
     setCurrentCohortId(cohortId);
     setView('roleSelection');
     setError(null);
@@ -551,24 +451,40 @@ function RoleSelectionPage() {
 }
 
 function SuperAdminView() {
-  const { db, setError } = useContext(AppContext);
+  const { setError, fetchCohorts } = useContext(AppContext);
   const [users, setUsers] = useState<any[]>([]);
   const [searchEmail, setSearchEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [invites, setInvites] = useState<any[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const q = query(collection(db, 'users'));
-    const unsub = onSnapshot(q, (snap: any) => {
-      setUsers(snap.docs.map((d: any) => ({ id: d.id, ...d.data() })));
-    });
-    return () => unsub();
-  }, [db]);
-
-  const handleRoleChange = async (userId: string, newRole: string) => {
+  const loadUsers = useCallback(async () => {
     try {
-      await updateDoc(doc(db, 'users', userId), { role: newRole });
+      const data = await api('/users');
+      setUsers(data);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }, [setError]);
+
+  const loadInvites = useCallback(async () => {
+    try {
+      const data = await api('/invites');
+      setInvites(data);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }, [setError]);
+
+  useEffect(() => {
+    loadUsers();
+    loadInvites();
+  }, [loadUsers, loadInvites]);
+
+  const handleRoleChange = async (userId: number, newRole: string) => {
+    try {
+      await api(`/users/${userId}/role`, { method: 'PATCH', body: JSON.stringify({ role: newRole }) });
+      loadUsers();
     } catch (err: any) {
       setError(err.message);
     }
@@ -579,27 +495,36 @@ function SuperAdminView() {
   const [newCohortStartDate, setNewCohortStartDate] = useState('');
   const [cohorts, setCohorts] = useState<any[]>([]);
 
+  const loadCohorts = useCallback(async () => {
+    try {
+      const data = await api('/cohorts');
+      setCohorts(data);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }, [setError]);
+
   useEffect(() => {
-    const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'cohorts'));
-    const unsub = onSnapshot(q, (snap: any) => {
-      setCohorts(snap.docs.map((d: any) => ({ id: d.id, ...d.data() })));
-    });
-    return () => unsub();
-  }, [db]);
+    loadCohorts();
+  }, [loadCohorts]);
 
   const handleCreateCohort = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCohortName.trim()) return;
     setLoading(true);
     try {
-      await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'cohorts'), {
-        name: newCohortName.trim(),
-        timezone: newCohortTimezone,
-        weekStartDate: newCohortStartDate || null,
-        createdAt: serverTimestamp(),
+      await api('/cohorts', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: newCohortName.trim(),
+          timezone: newCohortTimezone,
+          weekStartDate: newCohortStartDate || null,
+        }),
       });
       setNewCohortName('');
       setNewCohortStartDate('');
+      loadCohorts();
+      fetchCohorts();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -607,48 +532,37 @@ function SuperAdminView() {
     }
   };
 
-  const handleDeleteCohort = async (cohortId: string) => {
+  const handleDeleteCohort = async (cohortId: number) => {
     if (!confirm('Are you sure you want to delete this cohort? All associated data will be lost.')) return;
     try {
-      await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'cohorts', cohortId));
+      await api(`/cohorts/${cohortId}`, { method: 'DELETE' });
+      loadCohorts();
+      fetchCohorts();
     } catch (err: any) {
       setError(err.message);
     }
   };
 
-  useEffect(() => {
-    const q = query(collection(db, ...INVITES_PATH));
-    const unsub = onSnapshot(q, (snap: any) => {
-      const fetched = snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
-      fetched.sort((a: any, b: any) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-      setInvites(fetched);
-    });
-    return () => unsub();
-  }, [db]);
-
-  const handleCreateInvite = async (role: string, cohortId?: string, cohortName?: string) => {
-    const token = generateInviteToken();
+  const handleCreateInvite = async (role: string, cohortId?: number, cohortName?: string) => {
     try {
-      await setDoc(doc(db, ...INVITES_PATH, token), {
-        role,
-        cohortId: cohortId || null,
-        cohortName: cohortName || null,
-        used: false,
-        createdAt: serverTimestamp(),
-        createdBy: 'superadmin',
+      const invite = await api('/invites', {
+        method: 'POST',
+        body: JSON.stringify({ role, cohortId: cohortId || null, cohortName: cohortName || null }),
       });
-      const link = `${getBaseUrl()}?invite=${token}`;
+      const link = `${getBaseUrl()}?invite=${invite.token}`;
       await navigator.clipboard.writeText(link);
-      setCopiedId(token);
+      setCopiedId(invite.token);
       setTimeout(() => setCopiedId(null), 3000);
+      loadInvites();
     } catch (err: any) {
       setError(err.message);
     }
   };
 
-  const handleDeleteInvite = async (inviteId: string) => {
+  const handleDeleteInvite = async (inviteId: number) => {
     try {
-      await deleteDoc(doc(db, ...INVITES_PATH, inviteId));
+      await api(`/invites/${inviteId}`, { method: 'DELETE' });
+      loadInvites();
     } catch (err: any) {
       setError(err.message);
     }
@@ -772,13 +686,13 @@ function SuperAdminView() {
                     <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-600/30 text-yellow-300">Pending</span>
                   )}
                 </div>
-                <p className="text-slate-500 text-xs mt-1 truncate">Token: {inv.id}</p>
+                <p className="text-slate-500 text-xs mt-1 truncate">Token: {inv.token}</p>
               </div>
               <div className="flex items-center space-x-2 ml-4">
                 {!inv.used && (
-                  <button onClick={() => copyInviteLink(inv.id)}
+                  <button onClick={() => copyInviteLink(inv.token)}
                     className="flex items-center px-3 py-1.5 bg-slate-700 text-white text-xs font-bold rounded-lg hover:bg-slate-600 transition-colors">
-                    {copiedId === inv.id ? <><Check className="w-3 h-3 mr-1" /> Copied!</> : <><Copy className="w-3 h-3 mr-1" /> Copy Link</>}
+                    {copiedId === inv.token ? <><Check className="w-3 h-3 mr-1" /> Copied!</> : <><Copy className="w-3 h-3 mr-1" /> Copy Link</>}
                   </button>
                 )}
                 <button onClick={() => handleDeleteInvite(inv.id)} className="text-slate-400 hover:text-red-400 p-1">
@@ -794,7 +708,7 @@ function SuperAdminView() {
 }
 
 function SurveyView() {
-  const { user, db, currentCohortId, currentCohortSettings, surveyDays, SURVEY_TIMES, setError } = useContext(AppContext);
+  const { user, currentCohortId, currentCohortSettings, surveyDays, SURVEY_TIMES, setError } = useContext(AppContext);
   const [name, setName] = useState('');
   const [availability, setAvailability] = useState<Record<string, Record<string, boolean>>>({});
   const [submitted, setSubmitted] = useState(false);
@@ -803,19 +717,16 @@ function SurveyView() {
 
   useEffect(() => {
     if (!user || !currentCohortId) return;
-    const submissionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'cohorts', currentCohortId, 'submissions');
-    const q = query(submissionsRef, where('userId', '==', user.uid));
-    const unsub = onSnapshot(q, (snap: any) => {
-      if (!snap.empty) {
-        const subData = { id: snap.docs[0].id, ...snap.docs[0].data() };
-        setExistingSubmission(subData);
-        setName((subData as any).name || '');
-        setAvailability((subData as any).availability || {});
+    api(`/cohorts/${currentCohortId}/submissions`).then((data) => {
+      const mine = data.find((s: any) => s.userId === user.id);
+      if (mine) {
+        setExistingSubmission(mine);
+        setName(mine.name || '');
+        setAvailability((mine.availability as any) || {});
         setSubmitted(true);
       }
-    });
-    return () => unsub();
-  }, [user, currentCohortId, db]);
+    }).catch(() => {});
+  }, [user, currentCohortId]);
 
   const toggleSlot = (day: string, time: string) => {
     setAvailability(prev => {
@@ -829,22 +740,11 @@ function SurveyView() {
     setLoading(true);
     setError(null);
     try {
-      const submissionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'cohorts', currentCohortId, 'submissions');
-      if (existingSubmission) {
-        await updateDoc(doc(submissionsRef, existingSubmission.id), {
-          name: name.trim(),
-          availability,
-          updatedAt: serverTimestamp(),
-        });
-      } else {
-        await addDoc(submissionsRef, {
-          userId: user.uid,
-          email: user.email,
-          name: name.trim(),
-          availability,
-          createdAt: serverTimestamp(),
-        });
-      }
+      const result = await api(`/cohorts/${currentCohortId}/submissions`, {
+        method: 'POST',
+        body: JSON.stringify({ name: name.trim(), availability }),
+      });
+      setExistingSubmission(result);
       setSubmitted(true);
     } catch (err: any) {
       setError(err.message);
@@ -941,7 +841,7 @@ function SurveyView() {
 }
 
 function AdminView() {
-  const { db, currentCohortId, currentCohortSettings, surveyDays, SURVEY_TIMES, setError } = useContext(AppContext);
+  const { currentCohortId, currentCohortSettings, surveyDays, SURVEY_TIMES, setError, user } = useContext(AppContext);
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [startups, setStartups] = useState<any[]>([]);
   const [selections, setSelections] = useState<Record<string, boolean>>({});
@@ -952,19 +852,45 @@ function AdminView() {
   const [profileCard, setProfileCard] = useState<any>(null);
   const [inviteCopied, setInviteCopied] = useState(false);
 
+  const loadSubmissions = useCallback(async () => {
+    if (!currentCohortId) return;
+    try {
+      const data = await api(`/cohorts/${currentCohortId}/submissions`);
+      setSubmissions(data);
+    } catch {}
+  }, [currentCohortId]);
+
+  const loadStartups = useCallback(async () => {
+    if (!currentCohortId) return;
+    try {
+      const data = await api(`/cohorts/${currentCohortId}/startups`);
+      setStartups(data);
+    } catch {}
+  }, [currentCohortId]);
+
+  const loadSlotAssignments = useCallback(async () => {
+    if (!currentCohortId) return;
+    try {
+      const data = await api(`/cohorts/${currentCohortId}/slot-assignments`);
+      setSelections((data.selections as any) || {});
+      setSlotAssignments((data.assignments as any) || {});
+    } catch {}
+  }, [currentCohortId]);
+
+  useEffect(() => {
+    loadSubmissions();
+    loadStartups();
+    loadSlotAssignments();
+  }, [loadSubmissions, loadStartups, loadSlotAssignments]);
+
   const handleInvitePreceptor = async () => {
     if (!currentCohortId || !currentCohortSettings) return;
-    const token = generateInviteToken();
     try {
-      await setDoc(doc(db, ...INVITES_PATH, token), {
-        role: 'preceptor',
-        cohortId: currentCohortId,
-        cohortName: currentCohortSettings.name,
-        used: false,
-        createdAt: serverTimestamp(),
-        createdBy: 'admin',
+      const invite = await api('/invites', {
+        method: 'POST',
+        body: JSON.stringify({ role: 'preceptor', cohortId: currentCohortId, cohortName: currentCohortSettings.name }),
       });
-      const link = `${getBaseUrl()}?invite=${token}`;
+      const link = `${getBaseUrl()}?invite=${invite.token}`;
       await navigator.clipboard.writeText(link);
       setInviteCopied(true);
       setTimeout(() => setInviteCopied(false), 3000);
@@ -973,43 +899,15 @@ function AdminView() {
     }
   };
 
-  useEffect(() => {
-    if (!currentCohortId) return;
-    const submissionsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'cohorts', currentCohortId, 'submissions');
-    const unsub = onSnapshot(submissionsRef, (snap: any) => {
-      setSubmissions(snap.docs.map((d: any) => ({ id: d.id, ...d.data() })));
-    });
-    return () => unsub();
-  }, [currentCohortId, db]);
-
-  useEffect(() => {
-    if (!currentCohortId) return;
-    const startupsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'cohorts', currentCohortId, 'startups');
-    const unsub = onSnapshot(startupsRef, (snap: any) => {
-      setStartups(snap.docs.map((d: any) => ({ id: d.id, ...d.data() })));
-    });
-    return () => unsub();
-  }, [currentCohortId, db]);
-
-  useEffect(() => {
-    if (!currentCohortId) return;
-    const assignmentsRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'cohorts', currentCohortId, 'meta', 'slotAssignments');
-    const unsub = onSnapshot(assignmentsRef, (docSnap: any) => {
-      if (docSnap.exists()) {
-        setSlotAssignments(docSnap.data().assignments || {});
-        setSelections(docSnap.data().selections || {});
-      }
-    });
-    return () => unsub();
-  }, [currentCohortId, db]);
-
   const toggleSelection = async (preceptorName: string, day: string, time: string) => {
     const key = `${preceptorName}|${day}|${time}`;
     const newSelections = { ...selections, [key]: !selections[key] };
     setSelections(newSelections);
     try {
-      const assignmentsRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'cohorts', currentCohortId, 'meta', 'slotAssignments');
-      await setDoc(assignmentsRef, { selections: newSelections, assignments: slotAssignments }, { merge: true });
+      await api(`/cohorts/${currentCohortId}/slot-assignments`, {
+        method: 'PUT',
+        body: JSON.stringify({ selections: newSelections, assignments: slotAssignments }),
+      });
     } catch (err: any) {
       setError(err.message);
     }
@@ -1020,8 +918,10 @@ function AdminView() {
     const updated = { ...slotAssignments, [slotKey]: { ...(slotAssignments[slotKey] || {}), [field]: value } };
     setSlotAssignments(updated);
     try {
-      const assignmentsRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'cohorts', currentCohortId, 'meta', 'slotAssignments');
-      await setDoc(assignmentsRef, { assignments: updated, selections }, { merge: true });
+      await api(`/cohorts/${currentCohortId}/slot-assignments`, {
+        method: 'PUT',
+        body: JSON.stringify({ assignments: updated, selections }),
+      });
     } catch (err: any) {
       setError(err.message);
     }
@@ -1029,23 +929,30 @@ function AdminView() {
 
   const handleSaveStartup = async (startupData: any) => {
     try {
-      const startupsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'cohorts', currentCohortId, 'startups');
       if (startupData.id) {
         const { id, ...rest } = startupData;
-        await updateDoc(doc(startupsRef, id), rest);
+        await api(`/cohorts/${currentCohortId}/startups/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify(rest),
+        });
       } else {
-        await addDoc(startupsRef, { ...startupData, createdAt: serverTimestamp() });
+        await api(`/cohorts/${currentCohortId}/startups`, {
+          method: 'POST',
+          body: JSON.stringify(startupData),
+        });
       }
       setStartupModal(null);
+      loadStartups();
     } catch (err: any) {
       setError(err.message);
     }
   };
 
-  const handleDeleteStartup = async (startupId: string) => {
+  const handleDeleteStartup = async (startupId: number) => {
     if (!confirm('Delete this startup?')) return;
     try {
-      await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'cohorts', currentCohortId, 'startups', startupId));
+      await api(`/cohorts/${currentCohortId}/startups/${startupId}`, { method: 'DELETE' });
+      loadStartups();
     } catch (err: any) {
       setError(err.message);
     }
@@ -1140,7 +1047,7 @@ function AdminView() {
                 {surveyDays.map((day: string) => SURVEY_TIMES.map((time: string, idx: number) => {
                   const slotKey = `${day}|${time}`;
                   const assignment = slotAssignments[slotKey] || {};
-                  const assignedStartup = startups.find((s: any) => s.id === assignment.startupId);
+                  const assignedStartup = startups.find((s: any) => String(s.id) === String(assignment.startupId));
                   return (
                     <th key={`${day}-${time}`} className={`p-3 text-center border-b border-slate-700 font-semibold whitespace-nowrap min-w-[150px] ${idx === SURVEY_TIMES.length - 1 ? 'border-r' : ''}`}>
                       <div className="flex flex-col space-y-2">
@@ -1170,7 +1077,7 @@ function AdminView() {
                 <tr key={sub.id} className="border-b border-slate-800 hover:bg-slate-700/20 transition-colors">
                   <td className="p-4 font-semibold text-white border-r border-slate-700 sticky left-0 z-20 bg-slate-800/50 backdrop-blur-sm">{sub.name}</td>
                   {surveyDays.map((day: string) => SURVEY_TIMES.map((time: string, idx: number) => {
-                    const isAvailable = sub.availability?.[day]?.[time];
+                    const isAvailable = (sub.availability as any)?.[day]?.[time];
                     const isSelected = selections[`${sub.name}|${day}|${time}`];
                     return (
                       <td key={`${day}-${time}`} onClick={() => isAvailable && toggleSelection(sub.name, day, time)}
@@ -1236,7 +1143,6 @@ function AdminView() {
             </div>
             {profileCard.founders && <p className="text-slate-300 text-sm mb-2"><span className="font-bold text-slate-200">Founders:</span> {profileCard.founders}</p>}
             {profileCard.description && <p className="text-slate-400 text-sm mb-4">{profileCard.description}</p>}
-            {profileCard.website && <a href={profileCard.website} target="_blank" rel="noreferrer" className="flex items-center text-indigo-400 hover:text-indigo-300 text-sm"><LinkIcon className="w-4 h-4 mr-1.5" />{profileCard.website}</a>}
           </div>
         </div>
       )}
@@ -1251,7 +1157,6 @@ function StartupFormModal({ startup, onSave, onClose }: { startup: any; onSave: 
     industry: startup?.industry || '',
     stage: startup?.stage || '',
     description: startup?.description || '',
-    website: startup?.website || '',
   });
 
   const handleChange = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
@@ -1305,12 +1210,6 @@ function StartupFormModal({ startup, onSave, onClose }: { startup: any; onSave: 
               <input type="text" value={form.description} onChange={e => handleChange('description', e.target.value)}
                 className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="e.g. Connecting smallholder farmers to premium markets via mobile." />
-            </div>
-            <div className="col-span-2">
-              <label className="block text-sm font-bold text-slate-300 mb-1">Website / Deck Link</label>
-              <input type="url" value={form.website} onChange={e => handleChange('website', e.target.value)}
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="https://..." />
             </div>
           </div>
           <div className="flex space-x-3 pt-2">
