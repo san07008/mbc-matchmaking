@@ -39,6 +39,12 @@ router.post("/auth/register", async (req, res) => {
       return;
     }
 
+    const userName = displayName?.trim() || "";
+    if (inviteToken && !userName) {
+      res.status(400).json({ error: "Please enter your full name." });
+      return;
+    }
+
     const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
     if (existing.length > 0) {
       res.status(409).json({ error: "An account with this email already exists. Please sign in instead." });
@@ -67,9 +73,7 @@ router.post("/auth/register", async (req, res) => {
       res.status(400).json({ error: "An invite link is required to create an account. Please ask your administrator for one." });
       return;
     }
-
     const passwordHash = await bcrypt.hash(password, 10);
-    const userName = displayName?.trim() || "";
     const [user] = await db.insert(usersTable).values({ email, passwordHash, role, displayName: userName }).returning();
     await createSession(user.id, res);
     res.json({ user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role }, cohortId });
