@@ -2,8 +2,7 @@ import React, { useState, useEffect, createContext, useContext, useCallback } fr
 import {
   Download, AlertCircle, Calendar, Check, Users,
   Send, User, Clock, ArrowLeft, ShieldAlert, Star, CalendarPlus, Link as LinkIcon, Plus, X, Building,
-  GraduationCap, Briefcase, Settings, Globe, Rocket, LogOut, Shield, Eye, EyeOff, Copy, Mail, UserPlus, Trash2, Printer,
-  ChevronDown, Bell, BarChart3
+  GraduationCap, Briefcase, Settings, Globe, LogOut, Shield, Eye, EyeOff, Copy, Mail, UserPlus, Trash2, Printer,
 } from 'lucide-react';
 
 const getBaseUrl = () => {
@@ -206,43 +205,44 @@ export default function App() {
       currentCohortId, setCurrentCohortId, currentCohortSettings,
       cohorts, setCohorts, fetchCohorts, surveyDays, SURVEY_TIMES, handleSignOut, pendingInvite, setPendingInvite, setUser, setUserRole, inviteError, setInviteError, inviteLoading
     }}>
+      {view === 'login' ? (
+        <LoginPage />
+      ) : (
       <div className="min-h-screen bg-slate-900 text-slate-300 font-sans pb-20">
-        {view !== 'login' && (
-          <header className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700/50 sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-              <div className="flex items-center space-x-3">
-                <GraduationCap className="text-red-500 w-6 h-6" />
-                <h1 className="text-xl font-bold text-white">PreceptorLink</h1>
-                {currentCohortSettings?.timezone && (
-                  <span className="ml-4 px-3 py-1 bg-slate-700 rounded-full text-xs font-medium text-white">
-                    {currentCohortSettings.name} ({currentCohortSettings.timezone.split('/')[1]?.replace('_', ' ')})
+        <header className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700/50 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div className="flex items-center space-x-3">
+              <GraduationCap className="text-red-500 w-6 h-6" />
+              <h1 className="text-xl font-bold text-white">PreceptorLink</h1>
+              {currentCohortSettings?.timezone && (
+                <span className="ml-4 px-3 py-1 bg-slate-700 rounded-full text-xs font-medium text-white">
+                  {currentCohortSettings.name} ({currentCohortSettings.timezone.split('/')[1]?.replace('_', ' ')})
+                </span>
+              )}
+            </div>
+            <div className="flex items-center space-x-3">
+              {view !== 'cohortSelection' && (
+                <button
+                  onClick={() => { setView('cohortSelection'); setCurrentCohortId(null); setError(null); }}
+                  className="text-sm flex items-center text-slate-400 hover:text-white transition-colors font-medium"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-1.5" /> Back to Cohorts
+                </button>
+              )}
+              <div className="flex items-center space-x-2 pl-3 border-l border-slate-700">
+                <span className="text-xs text-slate-500 hidden sm:block">{user?.email}</span>
+                {(userRole === 'superadmin' || userRole === 'admin') && (
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${userRole === 'superadmin' ? 'bg-red-600/30 text-red-300' : 'bg-indigo-600/30 text-indigo-300'}`}>
+                    {userRole === 'superadmin' ? 'Super Admin' : 'Admin'}
                   </span>
                 )}
-              </div>
-              <div className="flex items-center space-x-3">
-                {view !== 'cohortSelection' && (
-                  <button
-                    onClick={() => { setView('cohortSelection'); setCurrentCohortId(null); setError(null); }}
-                    className="text-sm flex items-center text-slate-400 hover:text-white transition-colors font-medium"
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-1.5" /> Back to Cohorts
-                  </button>
-                )}
-                <div className="flex items-center space-x-2 pl-3 border-l border-slate-700">
-                  <span className="text-xs text-slate-500 hidden sm:block">{user?.email}</span>
-                  {(userRole === 'superadmin' || userRole === 'admin') && (
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${userRole === 'superadmin' ? 'bg-red-600/30 text-red-300' : 'bg-indigo-600/30 text-indigo-300'}`}>
-                      {userRole === 'superadmin' ? 'Super Admin' : 'Admin'}
-                    </span>
-                  )}
-                  <button onClick={handleSignOut} className="p-2 text-slate-400 hover:text-white transition-colors" title="Sign Out">
-                    <LogOut className="w-4 h-4" />
-                  </button>
-                </div>
+                <button onClick={handleSignOut} className="p-2 text-slate-400 hover:text-white transition-colors" title="Sign Out">
+                  <LogOut className="w-4 h-4" />
+                </button>
               </div>
             </div>
-          </header>
-        )}
+          </div>
+        </header>
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
           {error && (
             <div className="mb-6 p-4 bg-red-900/50 border border-red-500/30 text-red-300 flex items-center rounded-lg shadow-lg">
@@ -250,7 +250,6 @@ export default function App() {
               <span className="font-medium">{error}</span>
             </div>
           )}
-          {view === 'login' && <LoginPage />}
           {view === 'cohortSelection' && <CohortSelectionPage />}
           {view === 'roleSelection' && <RoleSelectionPage />}
           {view === 'survey' && <SurveyView />}
@@ -265,6 +264,7 @@ export default function App() {
           input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
         `}} />
       </div>
+      )}
     </AppContext.Provider>
   );
 }
@@ -330,10 +330,10 @@ function LoginPage() {
 
   if (inviteLoading) {
     return (
-      <div className="min-h-[85vh] flex flex-col items-center justify-center p-4">
+      <div className="min-h-[85vh] bg-white flex flex-col items-center justify-center p-4">
         <div className="flex flex-col items-center space-y-4">
-          <UserPlus className="w-12 h-12 text-emerald-400 animate-pulse" />
-          <p className="text-slate-400 font-medium">Verifying your invite...</p>
+          <div className="w-12 h-12 border-2 border-black border-t-transparent rounded-full animate-spin" />
+          <p className="text-neutral-500 font-mono text-sm uppercase tracking-wider">Verifying invite...</p>
         </div>
       </div>
     );
@@ -341,35 +341,31 @@ function LoginPage() {
 
   if (inviteError) {
     return (
-      <div className="min-h-[85vh] flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
-          <div className="text-center mb-8">
-            <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-            <h1 className="text-3xl font-extrabold text-white mb-3">Invite Link Issue</h1>
-          </div>
-          <div className="bg-slate-800 rounded-2xl border border-red-500/30 p-8 shadow-2xl">
+      <div className="min-h-[85vh] bg-white flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-lg border border-black p-10">
+          <h1 className="text-3xl font-black text-black tracking-tight mb-6">Invite Link Issue</h1>
+          <div className="border-t border-black pt-6 space-y-3">
             {inviteError.type === 'already_used' ? (
-              <div className="text-center space-y-3">
-                <p className="text-slate-300">This invite link has already been used.</p>
-                <p className="text-slate-400 text-sm">Each invite link can only be used once. If you already created your account, you can sign in below.</p>
-                <p className="text-slate-400 text-sm">Otherwise, please ask your administrator for a new invite link.</p>
-              </div>
+              <>
+                <p className="text-black">This invite link has already been used.</p>
+                <p className="text-neutral-500 text-sm">Each invite link can only be used once. If you already created your account, sign in below. Otherwise, ask your administrator for a new link.</p>
+              </>
             ) : inviteError.type === 'not_found' ? (
-              <div className="text-center space-y-3">
-                <p className="text-slate-300">This invite link is not valid.</p>
-                <p className="text-slate-400 text-sm">The link may have been deleted or is incorrect. Please check the link or ask your administrator for a new one.</p>
-              </div>
+              <>
+                <p className="text-black">This invite link is not valid.</p>
+                <p className="text-neutral-500 text-sm">The link may have been deleted or is incorrect. Please check the link or ask your administrator for a new one.</p>
+              </>
             ) : (
-              <div className="text-center space-y-3">
-                <p className="text-slate-300">Something went wrong verifying your invite.</p>
-                <p className="text-slate-400 text-sm">Please try again or ask your administrator for a new invite link.</p>
-              </div>
+              <>
+                <p className="text-black">Something went wrong verifying your invite.</p>
+                <p className="text-neutral-500 text-sm">Please try again or ask your administrator for a new invite link.</p>
+              </>
             )}
-            <button onClick={handleDismissInviteError}
-              className="w-full mt-6 py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg transition-colors shadow-lg">
-              Go to Sign In
-            </button>
           </div>
+          <button onClick={handleDismissInviteError}
+            className="w-full mt-8 py-3 bg-black text-white font-bold text-sm uppercase tracking-wider hover:bg-neutral-800 transition-colors">
+            Go to Sign In
+          </button>
         </div>
       </div>
     );
@@ -383,178 +379,190 @@ function LoginPage() {
 
   const faqItems = [
     { q: 'What is PreceptorLink?', a: 'PreceptorLink is a scheduling platform for the University of Utah\'s Master of Business Creation (MBC) program. It connects preceptors with startups by streamlining the availability and meeting scheduling process.' },
-    { q: 'How do I submit my availability as a preceptor?', a: 'After logging in, select your cohort and choose "I am a Preceptor." You\'ll see a weekly grid of time slots — simply click on the times you\'re available, then click "Submit Availability." You can update your selections at any time.' },
-    { q: 'Can I change my availability after submitting?', a: 'Yes! Log back in and go to the availability grid. Your previous selections will still be there. Update any slots and re-submit to save your changes.' },
+    { q: 'How do I submit my availability?', a: 'After logging in, select your cohort and choose "I am a Preceptor." You\'ll see a weekly grid of time slots — click on the times you\'re available, then click "Submit Availability." You can update your selections at any time.' },
+    { q: 'Can I change my availability after submitting?', a: 'Yes. Log back in and go to the availability grid. Your previous selections will still be there. Update any slots and re-submit to save your changes.' },
     { q: 'How will I know when my meeting is scheduled?', a: 'Once an admin assigns you to a meeting, you\'ll receive an email notification with the startup name, day, time, Zoom link, and a calendar invite (.ics file) you can add directly to your calendar.' },
     { q: 'How do admins invite preceptors?', a: 'Admins can generate a unique invite link from the dashboard and share it via email or message. The platform can also send the invite directly via email if SMTP is configured.' },
-    { q: 'Can admins export the schedule?', a: 'Yes. The admin dashboard has a "Download CSV" button for spreadsheet export and a "Print Schedule" button for a clean, printable view of all assignments.' },
+    { q: 'Can admins export the schedule?', a: 'Yes. The admin dashboard includes CSV export and a printable schedule view for all assignments.' },
     { q: 'Who do I contact if I have issues?', a: 'Reach out to your MBC program administrator. They manage the platform and can help with any account or scheduling questions.' },
   ];
 
+  const stepColors = ['bg-[#0037B1]', 'bg-[#01772c]', 'bg-[#FFDB01]'];
+  const stepTextColors = ['text-white', 'text-white', 'text-black'];
+
   return (
-    <div className="animate-in fade-in duration-500">
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-slate-900 to-emerald-900/10" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-indigo-500/5 rounded-full blur-3xl" />
-        <div className="relative max-w-4xl mx-auto px-4 pt-20 pb-16 text-center">
-          <div className="inline-flex items-center px-4 py-2 bg-indigo-600/20 border border-indigo-500/30 rounded-full mb-6">
-            <GraduationCap className="w-4 h-4 text-indigo-400 mr-2" />
-            <span className="text-indigo-300 text-sm font-semibold">University of Utah — Master of Business Creation</span>
+    <div className="bg-white text-black min-h-screen font-sans">
+      <nav className="border-b border-black">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <span className="text-xl font-black tracking-tight">PreceptorLink</span>
           </div>
-          <h1 className="text-5xl sm:text-6xl font-extrabold text-white mb-4 tracking-tight">
-            Preceptor<span className="text-indigo-400">Link</span>
-          </h1>
-          <p className="text-xl text-slate-300 mb-3 max-w-2xl mx-auto">Connecting Preceptors with Startups</p>
-          <p className="text-slate-400 mb-10 max-w-xl mx-auto">Streamline your preceptor-startup meeting scheduling. Submit availability, build schedules, and get notified — all in one place.</p>
-          <button onClick={() => loginRef.current?.scrollIntoView({ behavior: 'smooth' })}
-            className="inline-flex items-center px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-lg rounded-xl transition-all shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5">
-            <Rocket className="w-5 h-5 mr-2" /> Sign In to Get Started
-          </button>
+          <div className="flex items-center space-x-6">
+            <span className="hidden sm:block font-mono text-xs text-neutral-400 uppercase tracking-widest">University of Utah</span>
+            <button onClick={() => loginRef.current?.scrollIntoView({ behavior: 'smooth' })}
+              className="px-5 py-2 bg-black text-white text-sm font-bold uppercase tracking-wider hover:bg-neutral-800 transition-colors">
+              Sign In
+            </button>
+          </div>
         </div>
-      </div>
+      </nav>
 
-      <div className="max-w-5xl mx-auto px-4 py-20">
-        <div className="text-center mb-14">
-          <h2 className="text-3xl font-extrabold text-white mb-3">How It Works</h2>
-          <p className="text-slate-400">Three simple steps from availability to confirmed meetings</p>
-        </div>
-        <div className="grid md:grid-cols-3 gap-8">
-          {[
-            { icon: <Calendar className="w-8 h-8 text-emerald-400" />, title: 'Submit Availability', desc: 'Preceptors mark their open time slots on a simple weekly grid. Select the hours that work for you and submit.', color: 'emerald' },
-            { icon: <BarChart3 className="w-8 h-8 text-indigo-400" />, title: 'Build the Schedule', desc: 'Admins review availability, select preceptors for each slot, and assign startups to create the perfect matchups.', color: 'indigo' },
-            { icon: <Bell className="w-8 h-8 text-amber-400" />, title: 'Get Notified', desc: 'Everyone receives email notifications with meeting details and calendar invites. Export or print the full schedule.', color: 'amber' },
-          ].map((step, i) => (
-            <div key={i} className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8 text-center hover:border-slate-600 transition-colors">
-              <div className="w-16 h-16 bg-slate-700/50 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                {step.icon}
-              </div>
-              <div className="inline-flex items-center justify-center w-7 h-7 bg-slate-700 rounded-full text-xs font-bold text-slate-300 mb-3">{i + 1}</div>
-              <h3 className="text-lg font-bold text-white mb-2">{step.title}</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">{step.desc}</p>
+      <div className="border-b border-black">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid md:grid-cols-[1fr_auto] items-end">
+            <div className="py-16 md:py-24 pr-8">
+              <p className="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-6">Master of Business Creation</p>
+              <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.9] mb-8">
+                Connecting<br />Preceptors<br />with Startups<span className="inline-block w-3 h-12 sm:h-16 lg:h-20 bg-[#0037B1] ml-1 align-bottom" />
+              </h1>
+              <p className="text-lg text-neutral-600 max-w-lg leading-relaxed">
+                Streamline your preceptor-startup meeting scheduling. Submit availability, build schedules, and get notified.
+              </p>
             </div>
-          ))}
+            <div className="hidden md:flex flex-col items-end pb-16 md:pb-24 font-mono text-xs text-neutral-400 uppercase tracking-widest text-right space-y-1">
+              <span>Scheduling</span>
+              <span>Matching</span>
+              <span>Notifications</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 pb-20">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-extrabold text-white mb-3">Frequently Asked Questions</h2>
-          <p className="text-slate-400">Everything you need to know about using PreceptorLink</p>
+      <div className="bg-[#0037B1] text-white overflow-hidden">
+        <div className="animate-marquee whitespace-nowrap py-2.5 font-mono text-xs uppercase tracking-widest">
+          <span className="mx-8">// SUBMIT AVAILABILITY</span>
+          <span className="mx-8">// BUILD SCHEDULE</span>
+          <span className="mx-8">// ASSIGN STARTUPS</span>
+          <span className="mx-8">// GET NOTIFIED</span>
+          <span className="mx-8">// EXPORT CSV</span>
+          <span className="mx-8">// PRINT SCHEDULE</span>
+          <span className="mx-8">// CALENDAR INVITES</span>
+          <span className="mx-8">// SUBMIT AVAILABILITY</span>
+          <span className="mx-8">// BUILD SCHEDULE</span>
+          <span className="mx-8">// ASSIGN STARTUPS</span>
+          <span className="mx-8">// GET NOTIFIED</span>
+          <span className="mx-8">// EXPORT CSV</span>
         </div>
-        <div className="space-y-3">
-          {faqItems.map((item, i) => (
-            <div key={i} className="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden">
-              <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-slate-700/30 transition-colors">
-                <span className="font-semibold text-white text-sm">{item.q}</span>
-                <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform flex-shrink-0 ml-4 ${openFaq === i ? 'rotate-180' : ''}`} />
-              </button>
-              {openFaq === i && (
-                <div className="px-6 pb-4 animate-in slide-in-from-top-2 duration-200">
-                  <p className="text-slate-400 text-sm leading-relaxed">{item.a}</p>
+      </div>
+
+      <div className="border-b border-black">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-3 divide-x divide-black">
+            {[
+              { num: '01', title: 'Submit\nAvailability', desc: 'Preceptors mark open time slots on a weekly grid. Select the hours that work and submit.' },
+              { num: '02', title: 'Build the\nSchedule', desc: 'Admins review availability, select preceptors for each slot, and assign startups.' },
+              { num: '03', title: 'Get\nNotified', desc: 'Email notifications with meeting details and calendar invites. Export or print the schedule.' },
+            ].map((step, i) => (
+              <div key={i} className="p-8 md:p-10 group">
+                <div className="flex items-start justify-between mb-8">
+                  <span className={`inline-flex items-center justify-center w-10 h-10 ${stepColors[i]} ${stepTextColors[i]} font-mono text-sm font-bold`}>
+                    {step.num}
+                  </span>
+                </div>
+                <h3 className="text-2xl md:text-3xl font-black tracking-tight leading-tight whitespace-pre-line mb-4">{step.title}</h3>
+                <p className="text-neutral-500 text-sm leading-relaxed">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="border-b border-black">
+        <div className="max-w-7xl mx-auto px-6 py-16 md:py-20">
+          <div className="grid md:grid-cols-[1fr_1fr] gap-16 items-start">
+            <div>
+              <p className="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-4">FAQ</p>
+              <h2 className="text-4xl md:text-5xl font-black tracking-tighter leading-tight">Common<br />Questions</h2>
+            </div>
+            <div className="divide-y divide-black border-t border-black">
+              {faqItems.map((item, i) => (
+                <div key={i}>
+                  <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    className="w-full flex items-center justify-between py-5 text-left group">
+                    <span className="font-bold text-sm pr-4">{item.q}</span>
+                    <span className={`text-2xl font-light flex-shrink-0 transition-transform ${openFaq === i ? 'rotate-45' : ''}`}>+</span>
+                  </button>
+                  {openFaq === i && (
+                    <div className="pb-5 -mt-1">
+                      <p className="text-neutral-500 text-sm leading-relaxed">{item.a}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div ref={loginRef} className="border-b border-black">
+        <div className="max-w-7xl mx-auto px-6 py-16 md:py-20">
+          <div className="grid md:grid-cols-[1fr_1fr] gap-16 items-start">
+            <div>
+              <p className="font-mono text-xs text-neutral-400 uppercase tracking-widest mb-4">{isInvite ? 'INVITED' : 'ACCESS'}</p>
+              <h2 className="text-4xl md:text-5xl font-black tracking-tighter leading-tight">
+                {isInvite ? (<>Create Your<br />Account</>) : (<>Sign In</>)}
+              </h2>
+              {isInvite && (
+                <div className="mt-6 inline-flex items-center px-4 py-2 bg-[#01772c] text-white text-sm font-bold">
+                  {pendingInvite.role === 'admin' ? 'Admin' : 'Preceptor'}
+                  {pendingInvite.cohortName ? ` — ${pendingInvite.cohortName}` : ''}
                 </div>
               )}
+              {!isInvite && (
+                <p className="text-neutral-500 mt-4 max-w-sm">Access your PreceptorLink account to manage schedules and availability.</p>
+              )}
             </div>
-          ))}
+            <div className="border border-black p-8 md:p-10">
+              <form onSubmit={handleEmailAuth} className="space-y-5">
+                {isInvite && (
+                  <div>
+                    <label htmlFor="login-name" className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Full Name</label>
+                    <input id="login-name" type="text" required value={displayName} onChange={e => setDisplayName(e.target.value)}
+                      className="w-full border-b-2 border-black bg-transparent py-3 text-black text-lg outline-none focus:border-[#0037B1] transition-colors placeholder:text-neutral-300"
+                      placeholder="Dr. Jane Smith" />
+                  </div>
+                )}
+                <div>
+                  <label htmlFor="login-email" className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Email</label>
+                  <input id="login-email" type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                    className="w-full border-b-2 border-black bg-transparent py-3 text-black text-lg outline-none focus:border-[#0037B1] transition-colors placeholder:text-neutral-300"
+                    placeholder="you@example.com" />
+                </div>
+                <div>
+                  <label htmlFor="login-password" className="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">{isInvite ? 'Create Password' : 'Password'}</label>
+                  <div className="relative">
+                    <input id="login-password" type={showPassword ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)}
+                      minLength={isInvite ? 6 : undefined}
+                      className="w-full border-b-2 border-black bg-transparent py-3 pr-12 text-black text-lg outline-none focus:border-[#0037B1] transition-colors placeholder:text-neutral-300"
+                      placeholder={isInvite ? 'Minimum 6 characters' : '••••••••'} />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-0 top-3 text-neutral-400 hover:text-black">
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+                <button type="submit" disabled={loading}
+                  className="w-full mt-4 py-4 bg-black text-white font-bold text-sm uppercase tracking-wider hover:bg-neutral-800 transition-colors disabled:opacity-50">
+                  {loading ? (isInvite ? 'Creating account...' : 'Please wait...') : (isInvite ? 'Create Account' : 'Sign In')}
+                </button>
+              </form>
+              <p className="text-center text-neutral-400 text-sm mt-6">
+                {isInvite ? (
+                  <>Already have an account?{' '}
+                    <button onClick={() => { setPendingInvite(null); window.history.replaceState({}, '', window.location.pathname); }}
+                      className="text-[#0037B1] hover:underline font-bold">Sign in instead</button>
+                  </>
+                ) : (
+                  <>Need an account? Ask your admin for an invite link.</>
+                )}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div ref={loginRef} className="max-w-md mx-auto px-4 pb-20">
-        {isInvite ? (
-          <>
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-emerald-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <UserPlus className="w-8 h-8 text-emerald-400" />
-              </div>
-              <h2 className="text-2xl font-extrabold text-white mb-2">Create Your Account</h2>
-              <div className="inline-flex items-center px-4 py-2 bg-emerald-600/20 border border-emerald-500/30 rounded-full mt-2">
-                <Star className="w-4 h-4 text-emerald-400 mr-2" />
-                <span className="text-emerald-300 text-sm font-semibold">
-                  Invited as {pendingInvite.role === 'admin' ? 'an Admin' : 'a Preceptor'}
-                  {pendingInvite.cohortName ? ` for ${pendingInvite.cohortName}` : ''}
-                </span>
-              </div>
-            </div>
-            <div className="bg-slate-800 rounded-2xl border border-emerald-500/20 p-8 shadow-2xl">
-              <form onSubmit={handleEmailAuth} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-slate-300 mb-2">Full Name</label>
-                  <input type="text" required value={displayName} onChange={e => setDisplayName(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-emerald-500"
-                    placeholder="e.g. Dr. Jane Smith" />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-300 mb-2">Email Address</label>
-                  <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-emerald-500"
-                    placeholder="you@example.com" />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-300 mb-2">Create Password</label>
-                  <div className="relative">
-                    <input type={showPassword ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)}
-                      minLength={6}
-                      className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 pr-12 text-white outline-none focus:ring-2 focus:ring-emerald-500"
-                      placeholder="Minimum 6 characters" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3.5 text-slate-400 hover:text-white">
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-                <button type="submit" disabled={loading}
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition-colors shadow-lg shadow-emerald-500/20 disabled:opacity-50">
-                  {loading ? 'Creating your account...' : 'Create Account'}
-                </button>
-              </form>
-              <p className="text-center text-slate-500 text-sm mt-6">
-                Already have an account?{' '}
-                <button onClick={() => { setPendingInvite(null); window.history.replaceState({}, '', window.location.pathname); }}
-                  className="text-emerald-400 hover:text-emerald-300 underline font-semibold">
-                  Sign in instead
-                </button>
-              </p>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-extrabold text-white mb-2">Sign In</h2>
-              <p className="text-slate-400 text-sm">Access your PreceptorLink account</p>
-            </div>
-            <div className="bg-slate-800 rounded-2xl border border-slate-700 p-8 shadow-2xl">
-              <form onSubmit={handleEmailAuth} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-slate-300 mb-2">Email</label>
-                  <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="you@example.com" />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-300 mb-2">Password</label>
-                  <div className="relative">
-                    <input type={showPassword ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 pr-12 text-white outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="••••••••" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3.5 text-slate-400 hover:text-white">
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-                <button type="submit" disabled={loading}
-                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition-colors shadow-lg shadow-indigo-500/20 disabled:opacity-50">
-                  {loading ? 'Please wait...' : 'Sign In'}
-                </button>
-              </form>
-              <p className="text-center text-slate-500 text-sm mt-6">
-                Need an account? Ask your admin for an invite link.
-              </p>
-            </div>
-          </>
-        )}
-      </div>
-
-      <footer className="border-t border-slate-800 py-8 text-center">
-        <p className="text-slate-500 text-sm">PreceptorLink — University of Utah, Master of Business Creation</p>
+      <footer className="max-w-7xl mx-auto px-6 py-8 flex flex-col sm:flex-row justify-between items-center">
+        <span className="font-black text-sm tracking-tight">PreceptorLink</span>
+        <span className="font-mono text-xs text-neutral-400 uppercase tracking-widest mt-2 sm:mt-0">University of Utah, Master of Business Creation</span>
       </footer>
     </div>
   );
