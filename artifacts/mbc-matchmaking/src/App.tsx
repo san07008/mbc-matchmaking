@@ -103,6 +103,8 @@ export default function App() {
   const [currentCohortSettings, setCurrentCohortSettings] = useState<any>(null);
   const [cohorts, setCohorts] = useState<any[]>([]);
   const [pendingInvite, setPendingInvite] = useState<any>(null);
+  const [inviteError, setInviteError] = useState<{ type: string; role?: string; cohortName?: string } | null>(null);
+  const [inviteLoading, setInviteLoading] = useState(false);
 
   const fetchCohorts = useCallback(async () => {
     try {
@@ -115,11 +117,18 @@ export default function App() {
     const params = new URLSearchParams(window.location.search);
     const inviteToken = params.get('invite');
     if (inviteToken) {
+      setInviteLoading(true);
       api(`/invites/validate/${inviteToken}`).then((data) => {
         if (data.valid) {
           setPendingInvite({ token: inviteToken, role: data.role, cohortName: data.cohortName, cohortId: data.cohortId });
+        } else {
+          setInviteError({ type: data.reason || 'invalid', role: data.role, cohortName: data.cohortName });
         }
-      }).catch(() => {});
+      }).catch(() => {
+        setInviteError({ type: 'error' });
+      }).finally(() => {
+        setInviteLoading(false);
+      });
     }
   }, []);
 
@@ -194,7 +203,7 @@ export default function App() {
     <AppContext.Provider value={{
       user, userRole, error, setError, setView,
       currentCohortId, setCurrentCohortId, currentCohortSettings,
-      cohorts, setCohorts, fetchCohorts, surveyDays, SURVEY_TIMES, handleSignOut, pendingInvite, setPendingInvite, setUser, setUserRole
+      cohorts, setCohorts, fetchCohorts, surveyDays, SURVEY_TIMES, handleSignOut, pendingInvite, setPendingInvite, setUser, setUserRole, inviteError, setInviteError, inviteLoading
     }}>
       <div className="min-h-screen bg-slate-900 text-slate-300 font-sans pb-20">
         {view !== 'login' && (
@@ -260,9 +269,10 @@ export default function App() {
 }
 
 function LoginPage() {
-  const { setError, pendingInvite, setPendingInvite, setUser, setUserRole, setView, setCurrentCohortId } = useContext(AppContext);
+  const { setError, pendingInvite, setPendingInvite, setUser, setUserRole, setView, setCurrentCohortId, inviteError, setInviteError, inviteLoading } = useContext(AppContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const isInvite = !!pendingInvite;
@@ -275,14 +285,24 @@ function LoginPage() {
       if (isInvite) {
         const data = await api('/auth/register', {
           method: 'POST',
-          body: JSON.stringify({ email, password, inviteToken: pendingInvite.token }),
+          body: JSON.stringify({ email, password, inviteToken: pendingInvite.token, displayName: displayName.trim() }),
         });
         setUser(data.user);
         setUserRole(data.user.role);
-        if (data.cohortId) setCurrentCohortId(data.cohortId);
         setPendingInvite(null);
         window.history.replaceState({}, '', window.location.pathname);
-        setView('cohortSelection');
+        if (data.cohortId) {
+          setCurrentCohortId(data.cohortId);
+          if (data.user.role === 'preceptor') {
+            setView('survey');
+          } else if (data.user.role === 'admin') {
+            setView('admin');
+          } else {
+            setView('cohortSelection');
+          }
+        } else {
+          setView('cohortSelection');
+        }
       } else {
         const data = await api('/auth/login', {
           method: 'POST',
@@ -300,26 +320,127 @@ function LoginPage() {
     }
   };
 
+  const handleDismissInviteError = () => {
+    setInviteError(null);
+    window.history.replaceState({}, '', window.location.pathname);
+  };
+
+  if (inviteLoading) {
+    return (
+      <div className="min-h-[85vh] flex flex-col items-center justify-center p-4">
+        <div className="flex flex-col items-center space-y-4">
+          <UserPlus className="w-12 h-12 text-emerald-400 animate-pulse" />
+          <p className="text-slate-400 font-medium">Verifying your invite...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (inviteError) {
+    return (
+      <div className="min-h-[85vh] flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
+          <div className="text-center mb-8">
+            <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+            <h1 className="text-3xl font-extrabold text-white mb-3">Invite Link Issue</h1>
+          </div>
+          <div className="bg-slate-800 rounded-2xl border border-red-500/30 p-8 shadow-2xl">
+            {inviteError.type === 'already_used' ? (
+              <div className="text-center space-y-3">
+                <p className="text-slate-300">This invite link has already been used.</p>
+                <p className="text-slate-400 text-sm">Each invite link can only be used once. If you already created your account, you can sign in below.</p>
+                <p className="text-slate-400 text-sm">Otherwise, please ask your administrator for a new invite link.</p>
+              </div>
+            ) : inviteError.type === 'not_found' ? (
+              <div className="text-center space-y-3">
+                <p className="text-slate-300">This invite link is not valid.</p>
+                <p className="text-slate-400 text-sm">The link may have been deleted or is incorrect. Please check the link or ask your administrator for a new one.</p>
+              </div>
+            ) : (
+              <div className="text-center space-y-3">
+                <p className="text-slate-300">Something went wrong verifying your invite.</p>
+                <p className="text-slate-400 text-sm">Please try again or ask your administrator for a new invite link.</p>
+              </div>
+            )}
+            <button onClick={handleDismissInviteError}
+              className="w-full mt-6 py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg transition-colors shadow-lg">
+              Go to Sign In
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isInvite) {
+    return (
+      <div className="min-h-[85vh] flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 bg-emerald-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <UserPlus className="w-10 h-10 text-emerald-400" />
+            </div>
+            <h1 className="text-3xl font-extrabold text-white mb-2">Welcome to MBC Matchmaking</h1>
+            <div className="inline-flex items-center px-4 py-2 bg-emerald-600/20 border border-emerald-500/30 rounded-full mt-2">
+              <Star className="w-4 h-4 text-emerald-400 mr-2" />
+              <span className="text-emerald-300 text-sm font-semibold">
+                You've been invited as {pendingInvite.role === 'admin' ? 'an Admin' : 'a Preceptor'}
+                {pendingInvite.cohortName ? ` for ${pendingInvite.cohortName}` : ''}
+              </span>
+            </div>
+            <p className="text-slate-400 mt-3">Create your account to get started</p>
+          </div>
+          <div className="bg-slate-800 rounded-2xl border border-emerald-500/20 p-8 shadow-2xl">
+            <form onSubmit={handleEmailAuth} className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-300 mb-2">Full Name</label>
+                <input type="text" required value={displayName} onChange={e => setDisplayName(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="e.g. Dr. Jane Smith" autoFocus />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-300 mb-2">Email Address</label>
+                <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="you@example.com" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-300 mb-2">Create Password</label>
+                <div className="relative">
+                  <input type={showPassword ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)}
+                    minLength={6}
+                    className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 pr-12 text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                    placeholder="Minimum 6 characters" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3.5 text-slate-400 hover:text-white">
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+              <button type="submit" disabled={loading}
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition-colors shadow-lg shadow-emerald-500/20 disabled:opacity-50">
+                {loading ? 'Creating your account...' : 'Create Account'}
+              </button>
+            </form>
+            <p className="text-center text-slate-500 text-sm mt-6">
+              Already have an account?{' '}
+              <button onClick={() => { setPendingInvite(null); window.history.replaceState({}, '', window.location.pathname); }}
+                className="text-emerald-400 hover:text-emerald-300 underline font-semibold">
+                Sign in instead
+              </button>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[85vh] flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
         <div className="text-center mb-8">
           <Rocket className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-4xl font-extrabold text-white">MBC Matchmaking</h1>
-          {isInvite ? (
-            <div className="mt-3">
-              <div className="inline-flex items-center px-4 py-2 bg-emerald-600/20 border border-emerald-500/30 rounded-full">
-                <UserPlus className="w-4 h-4 text-emerald-400 mr-2" />
-                <span className="text-emerald-300 text-sm font-semibold">
-                  You've been invited as {pendingInvite.role === 'admin' ? 'an Admin' : 'a Preceptor'}
-                  {pendingInvite.cohortName ? ` for ${pendingInvite.cohortName}` : ''}
-                </span>
-              </div>
-              <p className="text-slate-400 mt-2">Create your account to get started</p>
-            </div>
-          ) : (
-            <p className="text-slate-400 mt-2">Sign in to access the platform</p>
-          )}
+          <p className="text-slate-400 mt-2">Sign in to access the platform</p>
         </div>
         <div className="bg-slate-800 rounded-2xl border border-slate-700 p-8 shadow-2xl">
           <form onSubmit={handleEmailAuth} className="space-y-4">
@@ -334,22 +455,20 @@ function LoginPage() {
               <div className="relative">
                 <input type={showPassword ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 pr-12 text-white outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder={isInvite ? 'Create a password (min 6 chars)' : '••••••••'} />
+                  placeholder="••••••••" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3.5 text-slate-400 hover:text-white">
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
             <button type="submit" disabled={loading}
-              className={`w-full py-3 ${isInvite ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20' : 'bg-red-600 hover:bg-red-500 shadow-red-500/20'} text-white font-bold rounded-lg transition-colors shadow-lg disabled:opacity-50`}>
-              {loading ? 'Please wait...' : isInvite ? 'Create Account' : 'Sign In'}
+              className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg transition-colors shadow-lg shadow-red-500/20 disabled:opacity-50">
+              {loading ? 'Please wait...' : 'Sign In'}
             </button>
           </form>
-          {!isInvite && (
-            <p className="text-center text-slate-500 text-sm mt-6">
-              Need an account? Ask your admin for an invite link.
-            </p>
-          )}
+          <p className="text-center text-slate-500 text-sm mt-6">
+            Need an account? Ask your admin for an invite link.
+          </p>
         </div>
       </div>
     </div>

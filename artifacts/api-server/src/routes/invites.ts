@@ -21,11 +21,15 @@ router.get("/invites/validate/:token", async (req, res) => {
   try {
     const invites = await db.select().from(invitesTable).where(eq(invitesTable.token, req.params.token as string)).limit(1);
     if (invites.length === 0) {
-      res.json({ valid: false });
+      res.json({ valid: false, reason: "not_found" });
       return;
     }
     const invite = invites[0];
-    res.json({ valid: !invite.used, role: invite.role, cohortName: invite.cohortName, cohortId: invite.cohortId });
+    if (invite.used) {
+      res.json({ valid: false, reason: "already_used", role: invite.role, cohortName: invite.cohortName });
+      return;
+    }
+    res.json({ valid: true, role: invite.role, cohortName: invite.cohortName, cohortId: invite.cohortId });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

@@ -29,7 +29,7 @@ async function createSession(userId: number, res: any) {
 
 router.post("/auth/register", async (req, res) => {
   try {
-    const { email, password, inviteToken } = req.body;
+    const { email, password, inviteToken, displayName } = req.body;
     if (!email || !password) {
       res.status(400).json({ error: "Email and password are required" });
       return;
@@ -41,7 +41,7 @@ router.post("/auth/register", async (req, res) => {
 
     const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
     if (existing.length > 0) {
-      res.status(409).json({ error: "An account with this email already exists" });
+      res.status(409).json({ error: "An account with this email already exists. Please sign in instead." });
       return;
     }
 
@@ -53,23 +53,24 @@ router.post("/auth/register", async (req, res) => {
     } else if (inviteToken) {
       const invites = await db.select().from(invitesTable).where(eq(invitesTable.token, inviteToken)).limit(1);
       if (invites.length === 0) {
-        res.status(400).json({ error: "Invalid invite link" });
+        res.status(400).json({ error: "This invite link is invalid. Please ask your administrator for a new one." });
         return;
       }
       if (invites[0].used) {
-        res.status(400).json({ error: "This invite link has already been used" });
+        res.status(400).json({ error: "This invite link has already been used. Each invite can only be used once. Please ask your administrator for a new invite." });
         return;
       }
       role = invites[0].role;
       cohortId = invites[0].cohortId;
       await db.update(invitesTable).set({ used: true, usedBy: email, usedAt: new Date() }).where(eq(invitesTable.token, inviteToken));
     } else {
-      res.status(400).json({ error: "An invite link is required to create an account" });
+      res.status(400).json({ error: "An invite link is required to create an account. Please ask your administrator for one." });
       return;
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const [user] = await db.insert(usersTable).values({ email, passwordHash, role, displayName: "" }).returning();
+    const userName = displayName?.trim() || "";
+    const [user] = await db.insert(usersTable).values({ email, passwordHash, role, displayName: userName }).returning();
     await createSession(user.id, res);
     res.json({ user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role }, cohortId });
   } catch (err: any) {
