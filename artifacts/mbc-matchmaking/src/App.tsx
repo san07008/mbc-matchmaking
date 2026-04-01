@@ -3,6 +3,7 @@ import {
   Download, AlertCircle, Calendar, Check, Users,
   Send, User, Clock, ArrowLeft, ShieldAlert, Star, CalendarPlus, Link as LinkIcon, Plus, X, Building,
   GraduationCap, Briefcase, Settings, Globe, LogOut, Shield, Eye, EyeOff, Copy, Mail, UserPlus, Trash2, Printer,
+  ChevronDown, ChevronRight,
 } from 'lucide-react';
 import { WORLD_MAP_DOTS, WORLD_MAP_VB } from './worldMapData';
 
@@ -965,6 +966,11 @@ function SurveyView() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [existingSubmission, setExistingSubmission] = useState<any>(null);
+  const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {};
+    if (surveyDays.length > 0) init[surveyDays[0]] = true;
+    return init;
+  });
 
   useEffect(() => {
     if (!user || !currentCohortId) return;
@@ -1010,14 +1016,21 @@ function SurveyView() {
     total + Object.values(daySlots).filter(Boolean).length, 0
   );
 
+  const toggleDay = (day: string) => {
+    setExpandedDays(prev => ({ ...prev, [day]: !prev[day] }));
+  };
+
+  const getDaySelectedCount = (day: string) =>
+    Object.values(availability[day] || {}).filter(Boolean).length;
+
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="bg-white rounded-xl shadow-sm p-8 mb-8">
-        <div className="flex items-center space-x-4 mb-4">
-          <Calendar className="w-10 h-10 text-[#E8772E]" />
+    <div className="max-w-5xl mx-auto pb-24 lg:pb-0">
+      <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 lg:p-8 mb-4 lg:mb-8">
+        <div className="flex items-center space-x-3 lg:space-x-4 mb-4">
+          <Calendar className="w-8 h-8 lg:w-10 lg:h-10 text-[#E8772E] flex-shrink-0" />
           <div>
-            <h1 className="text-3xl font-black text-[#1A1A1A] tracking-tight">Preceptor Availability Survey</h1>
-            <p className="text-[#6B6B6B]">{currentCohortSettings.name} — {currentCohortSettings.timezone?.split('/')[1]?.replace('_', ' ')}</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-[#1A1A1A] tracking-tight">Preceptor Availability Survey</h1>
+            <p className="text-[#6B6B6B] text-sm lg:text-base">{currentCohortSettings.name} — {currentCohortSettings.timezone?.split('/')[1]?.replace('_', ' ')}</p>
           </div>
         </div>
         {currentCohortSettings.weekStartDate && (
@@ -1027,7 +1040,7 @@ function SurveyView() {
         )}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-[#E8E4DF] p-8 mb-8">
+      <div className="bg-white rounded-xl shadow-sm border border-[#E8E4DF] p-4 sm:p-6 lg:p-8 mb-4 lg:mb-8">
         <div className="mb-6">
           <label className="block text-xs font-bold uppercase tracking-wider text-[#6B6B6B] mb-2">Your Full Name</label>
           <input type="text" value={name} onChange={e => setName(e.target.value)}
@@ -1039,7 +1052,7 @@ function SurveyView() {
           Select the time slots when you are available ({availableCount} selected):
         </p>
 
-        <div className="overflow-auto custom-scrollbar">
+        <div className="hidden lg:block overflow-auto custom-scrollbar">
           <table className="w-full text-sm border-collapse min-w-max">
             <thead>
               <tr>
@@ -1071,9 +1084,70 @@ function SurveyView() {
             </tbody>
           </table>
         </div>
+
+        <div className="lg:hidden space-y-3">
+          {surveyDays.map((day: string, dayIdx: number) => {
+            const isOpen = !!expandedDays[day];
+            const selectedCount = getDaySelectedCount(day);
+            const dayId = `accordion-day-${dayIdx}`;
+            return (
+              <div key={day} className="border border-[#E8E4DF] rounded-lg overflow-hidden">
+                <button
+                  onClick={() => toggleDay(day)}
+                  aria-expanded={isOpen}
+                  aria-controls={dayId}
+                  className="w-full flex items-center justify-between p-4 bg-[#F5F4F0]/60 hover:bg-[#F5F4F0] transition-colors text-left"
+                >
+                  <div className="flex items-center space-x-3">
+                    {isOpen
+                      ? <ChevronDown className="w-5 h-5 text-[#E8772E] flex-shrink-0" />
+                      : <ChevronRight className="w-5 h-5 text-[#A3A3A3] flex-shrink-0" />
+                    }
+                    <span className="font-bold text-[#1A1A1A] text-sm sm:text-base">{day}</span>
+                  </div>
+                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                    selectedCount > 0
+                      ? 'bg-[#2D8A56]/10 text-[#2D8A56]'
+                      : 'bg-[#E8E4DF] text-[#A3A3A3]'
+                  }`}>
+                    {selectedCount} selected
+                  </span>
+                </button>
+                <div
+                  id={dayId}
+                  role="region"
+                  className={`grid grid-cols-2 gap-2 p-4 transition-all duration-300 ease-in-out ${
+                    isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden !p-0'
+                  }`}
+                >
+                  {SURVEY_TIMES.map((time: string) => {
+                    const isSelected = availability[day]?.[time];
+                    return (
+                      <button
+                        key={time}
+                        onClick={() => toggleSlot(day, time)}
+                        className={`flex items-center justify-center space-x-2 rounded-lg font-bold text-sm transition-all min-h-[44px] ${
+                          isSelected
+                            ? 'bg-[#2D8A56] text-white shadow-sm'
+                            : 'bg-[#F5F4F0] text-[#6B6B6B] hover:bg-[#E8E4DF]'
+                        }`}
+                      >
+                        {isSelected
+                          ? <Check className="w-4 h-4" strokeWidth={3} />
+                          : <span className="text-[#A3A3A3]">—</span>
+                        }
+                        <span>{time}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="hidden lg:flex items-center justify-between">
         <div>
           {submitted && (
             <span className="text-[#2D8A56] font-bold flex items-center">
@@ -1086,6 +1160,22 @@ function SurveyView() {
           <Send className="w-5 h-5 mr-2" />
           {loading ? 'Saving...' : existingSubmission ? 'Update Availability' : 'Submit Availability'}
         </button>
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white border-t border-[#E8E4DF] shadow-[0_-4px_12px_rgba(0,0,0,0.08)] px-4 py-3">
+        <div className="flex items-center justify-between max-w-5xl mx-auto">
+          <div className="flex flex-col">
+            <span className="text-xs text-[#6B6B6B]">
+              {submitted ? 'Saved' : 'Total'}
+            </span>
+            <span className="text-sm font-bold text-[#1A1A1A]">{availableCount} hour{availableCount !== 1 ? 's' : ''} selected</span>
+          </div>
+          <button onClick={handleSubmit} disabled={loading}
+            className="px-6 py-3 bg-[#E8772E] text-white font-bold text-sm rounded-lg hover:bg-[#D4691E] transition-colors disabled:opacity-50 flex items-center">
+            <Send className="w-4 h-4 mr-2" />
+            {loading ? 'Saving...' : existingSubmission ? 'Update' : 'Submit'}
+          </button>
+        </div>
       </div>
     </div>
   );
