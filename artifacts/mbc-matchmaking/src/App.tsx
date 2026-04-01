@@ -1023,7 +1023,13 @@ function SurveyView() {
   );
 
   const toggleDay = (day: string) => {
-    setExpandedDays(prev => ({ ...prev, [day]: !prev[day] }));
+    setExpandedDays(prev => {
+      const wasOpen = !!prev[day];
+      const next: Record<string, boolean> = {};
+      surveyDays.forEach(d => { next[d] = false; });
+      if (!wasOpen) next[day] = true;
+      return next;
+    });
   };
 
   const getDaySelectedCount = (day: string) =>
@@ -1119,18 +1125,20 @@ function SurveyView() {
                     {selectedCount} selected
                   </span>
                 </button>
-                {isOpen && (
-                  <div
-                    id={dayId}
-                    role="region"
-                    className="grid grid-cols-2 gap-2 p-4 accordion-panel-enter"
-                  >
+                <div
+                  id={dayId}
+                  role="region"
+                  aria-hidden={!isOpen}
+                  className={`accordion-panel ${isOpen ? 'accordion-panel-open' : 'accordion-panel-closed'}`}
+                >
+                  <div className="grid grid-cols-2 gap-2 p-4">
                     {SURVEY_TIMES.map((time: string) => {
                       const isSelected = availability[day]?.[time];
                       return (
                         <button
                           key={time}
                           onClick={() => toggleSlot(day, time)}
+                          tabIndex={isOpen ? 0 : -1}
                           className={`flex items-center justify-center space-x-2 rounded-lg font-bold text-sm transition-all min-h-[44px] ${
                             isSelected
                               ? 'bg-[#2D8A56] text-white shadow-sm'
@@ -1146,7 +1154,7 @@ function SurveyView() {
                       );
                     })}
                   </div>
-                )}
+                </div>
               </div>
             );
           })}

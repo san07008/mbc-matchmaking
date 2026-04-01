@@ -80,22 +80,20 @@
   --radius: 0.5rem;
 }
 
-@keyframes accordion-slide-in {
-  from {
-    opacity: 0;
-    transform: scaleY(0.95);
-    max-height: 0;
-  }
-  to {
-    opacity: 1;
-    transform: scaleY(1);
-    max-height: 500px;
-  }
+.accordion-panel {
+  overflow: hidden;
+  transform-origin: top;
+  transition: max-height 300ms ease-in-out, opacity 300ms ease-in-out;
 }
 
-.accordion-panel-enter {
-  animation: accordion-slide-in 300ms ease-in-out;
-  transform-origin: top;
+.accordion-panel-open {
+  max-height: 500px;
+  opacity: 1;
+}
+
+.accordion-panel-closed {
+  max-height: 0;
+  opacity: 0;
 }
 
 @layer base {
