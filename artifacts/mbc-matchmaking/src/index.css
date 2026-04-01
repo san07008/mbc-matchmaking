@@ -80,21 +80,6 @@
   --radius: 0.5rem;
 }
 
-@keyframes accordion-open {
-  from {
-    opacity: 0;
-    max-height: 0;
-  }
-  to {
-    opacity: 1;
-    max-height: 500px;
-  }
-}
-
-.animate-accordion-open {
-  animation: accordion-open 300ms ease-in-out;
-}
-
 @layer base {
   * {
     @apply border-border;
