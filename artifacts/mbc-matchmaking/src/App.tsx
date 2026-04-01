@@ -966,11 +966,17 @@ function SurveyView() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [existingSubmission, setExistingSubmission] = useState<any>(null);
-  const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>(() => {
-    const init: Record<string, boolean> = {};
-    if (surveyDays.length > 0) init[surveyDays[0]] = true;
-    return init;
-  });
+  const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (surveyDays.length > 0) {
+      setExpandedDays(prev => {
+        const hasAnyOpen = Object.values(prev).some(Boolean);
+        if (!hasAnyOpen) return { ...prev, [surveyDays[0]]: true };
+        return prev;
+      });
+    }
+  }, [surveyDays]);
 
   useEffect(() => {
     if (!user || !currentCohortId) return;
@@ -1116,6 +1122,7 @@ function SurveyView() {
                 <div
                   id={dayId}
                   role="region"
+                  aria-hidden={!isOpen}
                   className={`grid grid-cols-2 gap-2 p-4 transition-all duration-300 ease-in-out ${
                     isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden !p-0'
                   }`}
