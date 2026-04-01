@@ -1,0 +1,348 @@
+Mobile Grid Redesign Prompt - PreceptorLink Availability Survey
+Context
+The current availability grid in PreceptorLink's preceptor survey is not mobile-friendly. On phones, users face a dense, scrollable table with 40+ buttons (8 time slots × 5 days) that's difficult to navigate, read, and interact with.
+Problem Statement
+
+Current UX: Single dense table, horizontal + vertical scrolling required on mobile
+Issue: Buttons are small, layout is cramped, users can't easily see a full day's availability at once
+Goal: Create a responsive, touch-friendly interface that works beautifully on all screen sizes
+
+Design Requirements
+1. Desktop (1024px and up)
+
+Layout: Keep the current grid view as-is (full 5×8 table)
+Reason: Admins and users on desktops benefit from seeing the full week at once
+No changes to current desktop experience
+
+2. Tablet (768px - 1023px)
+
+Layout: Accordion-style OR two-column grid
+Preference: Accordion (one day per accordion item)
+Details:
+
+Each day is an expandable section
+Default: Monday expanded, others collapsed
+Title shows: "Monday, Mar 27" + count of selected hours "(2 selected)"
+Click to expand/collapse
+
+
+
+3. Mobile (under 768px)
+
+Layout: Accordion-style, one day at a time
+Key Features:
+
+Full-width accordion panels
+Each panel shows day name + date
+Large, touch-friendly buttons (minimum 44px × 44px)
+Time slots displayed as a vertical list of toggle buttons
+Clear visual distinction between selected/unselected
+Smooth animations on expand/collapse
+Sticky summary at top or bottom showing total selected hours
+
+
+
+4. Visual Hierarchy (All Sizes)
+┌─────────────────────────────────────┐
+│ Your Availability (10 hours selected) │  ← Sticky summary bar
+└─────────────────────────────────────┘
+
+┌─ Monday, Mar 27 (2 selected) ─────────┐  ← Day header with chevron
+│                                        │
+│ [9 AM   ] [10 AM ] [11 AM ] [12 PM ]  │  ← Time slots as grid
+│ [1 PM  ] [2 PM  ] [3 PM  ] [4 PM  ]   │
+│                                        │
+└────────────────────────────────────────┘
+
+┌─ Tuesday, Mar 28 (0 selected) ────────┐  ← Collapsed by default
+│ (Tap to expand)                        │
+└────────────────────────────────────────┘
+Detailed Mobile Specifications
+Header Section
+Title: "Preceptor Availability Survey"
+Subtitle: "Cohort Name — Timezone"
+Status Line: "Week of Mar 27 - Mar 31"
+Sticky Summary Bar (Mobile)
+Position: Fixed at bottom OR top
+Content: "Selected: 10 hours" + progress indicator
+Design: Light background, clear CTA visibility
+Accordion Item Structure
+HEADER (clickable):
+├─ Day name + full date: "Monday, Mar 27"
+├─ Count badge: "(2 selected)" in green
+└─ Chevron icon: ↓ / → indicating state
+
+CONTENT (when expanded):
+├─ Time slot buttons in 2-column grid
+├─ Each button: [9 AM] with check/dash icon
+├─ Selected: Green background, white checkmark
+├─ Unselected: Light gray background, dash
+└─ Smooth expand animation
+Time Slot Button States
+Unselected State:
+┌──────────────┐
+│   9 AM       │
+│      –       │
+└──────────────┘
+Background: #F5F4F0 (light gray)
+Text: #A3A3A3 (muted)
+Height: 44px (mobile), 40px (desktop)
+Width: 48% on mobile (2-column grid)
+Selected State:
+┌──────────────┐
+│   9 AM       │
+│      ✓       │
+└──────────────┘
+Background: #2D8A56 (green)
+Text: White
+Icon: Checkmark (from lucide-react)
+Same sizing as unselected
+Hover State (Desktop):
+Background: Slight shade change
+Cursor: Pointer
+Transition: Smooth 150ms
+Mobile Gesture Interactions
+
+Tap accordion header: Expand/collapse with smooth animation (300ms)
+Tap time slot: Toggle selection with instant visual feedback
+Swipe left/right: (Optional) Scroll between days without accordion
+
+Responsive Breakpoints
+typescript// Mobile-first approach
+const BREAKPOINTS = {
+  mobile: '0px',      // < 768px (phones)
+  tablet: '768px',    // 768px - 1024px
+  desktop: '1024px',  // 1024px+
+};
+
+// Tailwind classes to use
+// sm: (640px) — for minor tweaks
+// md: (768px) — MAJOR LAYOUT CHANGE (accordion → grid)
+// lg: (1024px) — desktop grid with full table
+// xl: (1280px) — extra spacing
+Layout Code Structure
+tsx// Pseudocode for implementation
+
+<div className="flex flex-col h-screen">
+  {/* Sticky Header */}
+  <div className="sticky top-0 bg-white shadow-sm p-4">
+    <h1>Preceptor Availability Survey</h1>
+    <p className="text-sm text-gray-500">Week of Mar 27 - Mar 31</p>
+  </div>
+
+  {/* Main Content */}
+  <div className="flex-1 overflow-y-auto p-4 md:p-8">
+
+    {/* DESKTOP: Full Grid (hidden on mobile/tablet) */}
+    <div className="hidden lg:block">
+      <AvailabilityGrid surveyDays={surveyDays} />
+    </div>
+
+    {/* MOBILE/TABLET: Accordion */}
+    <div className="lg:hidden">
+      {surveyDays.map((day) => (
+        <AccordionDay
+          key={day}
+          day={day}
+          times={SURVEY_TIMES}
+          availability={availability[day]}
+          onToggle={(time) => toggleSlot(day, time)}
+          selectedCount={Object.values(availability[day] || {}).filter(Boolean).length}
+        />
+      ))}
+    </div>
+  </div>
+
+  {/* Sticky Summary (Mobile) */}
+  <div className="sticky bottom-0 md:hidden bg-white border-t p-4 flex justify-between items-center">
+    <span className="text-sm font-semibold">Selected: {totalHours} hours</span>
+    <button className="px-6 py-3 bg-orange-500 text-white font-bold rounded-lg">
+      {submitted ? 'Update' : 'Submit'}
+    </button>
+  </div>
+
+  {/* Desktop Submit Button */}
+  <div className="hidden md:flex justify-end p-8 gap-4">
+    <button className="px-8 py-3 bg-orange-500 text-white font-bold rounded-lg">
+      Submit Availability
+    </button>
+  </div>
+</div>
+Accordion Component Specifications
+AccordionDay Props
+typescriptinterface AccordionDayProps {
+  day: string;                    // "Monday, Mar 27"
+  times: string[];                // ["9 AM", "10 AM", ...]
+  availability: Record<string, boolean>; // { "9 AM": true, "10 AM": false, ... }
+  onToggle: (time: string) => void;
+  selectedCount: number;          // Number of selected slots for this day
+  isDefaultOpen?: boolean;        // First day opens by default
+}
+Accordion Animation
+Expand:
+  - Height: 0 → auto
+  - Opacity: 0 → 1
+  - Duration: 300ms
+  - Easing: ease-in-out
+
+Collapse:
+  - Height: auto → 0
+  - Opacity: 1 → 0
+  - Duration: 300ms
+  - Easing: ease-in-out
+Color & Spacing Reference
+Colors (use existing palette):
+- Primary: #E8772E (orange)
+- Success: #2D8A56 (green) — selected state
+- Background: #F5F4F0 (warm gray)
+- Border: #E8E4DF (light gray)
+- Text: #1A1A1A (dark)
+- Muted: #6B6B6B, #A3A3A3
+
+Spacing (Tailwind):
+- Mobile: px-4 (16px), py-4 (16px)
+- Tablet: px-6 (24px), py-6 (24px)
+- Desktop: px-8 (32px), py-8 (32px)
+
+Border Radius:
+- Buttons: rounded-lg (8px)
+- Cards: rounded-xl (12px)
+- Accordion: rounded-lg (8px)
+Accessibility Requirements
+
+Semantic HTML:
+
+Accordion headers should be <button> elements with aria-expanded
+Use <details> and <summary> if not building custom
+
+
+ARIA Labels:
+
+tsx   <button
+     aria-expanded={isOpen}
+     aria-controls={`day-${day}`}
+     className="w-full..."
+   >
+     {day} {selectedCount > 0 && `(${selectedCount} selected)`}
+   </button>
+   <div id={`day-${day}`} role="region">
+     {/* Time slots */}
+   </div>
+
+Keyboard Navigation:
+
+Tab through accordion headers
+Enter/Space to expand/collapse
+Tab through time slot buttons
+Spacebar to toggle selection
+
+
+Color Contrast:
+
+Selected: Green (#2D8A56) on white → ✓ 5.5:1 (AA+)
+Unselected: Gray (#A3A3A3) on white → Check ratio, may need darker text
+
+
+Touch Targets:
+
+Minimum 44px × 44px for mobile buttons
+Adequate spacing between buttons (8px minimum gap)
+
+
+
+Loading & Error States
+Loading (First Load)
+┌─────────────────────────────┐
+│ Preceptor Availability      │
+│ Survey                      │
+└─────────────────────────────┘
+
+[Loading skeleton or spinner]
+"Loading availability calendar..."
+Error State
+┌─ Error Loading Data ────────┐
+│ Failed to load calendar.    │
+│                             │
+│ [Retry Button]              │
+└─────────────────────────────┘
+Confirmation & Success
+Before Submit
+┌──────────────────────────────┐
+│ Confirm Your Availability    │
+│                              │
+│ You've selected:             │
+│ • Monday: 2 hours            │
+│ • Tuesday: 3 hours           │
+│ • Total: 10 hours            │
+│                              │
+│ [Cancel] [Confirm & Submit]  │
+└──────────────────────────────┘
+After Submit
+┌──────────────────────────────┐
+│ ✓ Your availability has been │
+│   saved successfully!        │
+│                              │
+│ You can update anytime by    │
+│ returning to this form.      │
+└──────────────────────────────┘
+Implementation Checklist
+
+ Create AccordionDay.tsx component
+ Create TimeSlotButton.tsx component
+ Update SurveyView.tsx to conditionally render accordion vs. grid
+ Add Tailwind breakpoints (md:, lg:)
+ Test on iPhone SE (375px width)
+ Test on Pixel 4 (412px width)
+ Test on iPad Air (820px width)
+ Test on Desktop (1440px width)
+ Implement smooth animations with Tailwind transitions
+ Add ARIA labels for accessibility
+ Test keyboard navigation (Tab, Enter, Space)
+ Test with screen reader (NVDA, JAWS, VoiceOver)
+ Verify color contrast ratios
+ Performance test (no jank on expand/collapse)
+
+Example: Before & After
+Before (Desktop-Only Grid)
+┌──────────────────────────────────────────────┐
+│ Day | 9 AM | 10 AM | 11 AM | 12 PM | 1 PM...│
+├──────────────────────────────────────────────┤
+│ Mon │  [ ] │  [ ]  │  [✓]  │  [ ]  │  [✓]...│
+│ Tue │  [ ] │  [✓]  │  [ ]  │  [✓]  │  [ ]...│
+│ ...                                         │
+└──────────────────────────────────────────────┘
+(Requires horizontal scroll on mobile)
+After (Mobile Accordion)
+┌─ Monday, Mar 27 (2 selected) ──┐
+│                                │
+│ [9 AM ] [10 AM]               │
+│ [11 AM] [12 PM]               │
+│ [1 PM] [2 PM]                 │
+│ [3 PM] [4 PM]                 │
+│                                │
+└────────────────────────────────┘
+
+┌─ Tuesday, Mar 28 (0 selected) ─┐
+│ (Tap to expand)                │
+└────────────────────────────────┘
+
+...
+
+┌────────────────────────────────┐
+│ Selected: 10 hours   [Submit] │
+└────────────────────────────────┘
+(No horizontal scroll needed)
+Performance Considerations
+
+Lazy Rendering: Only render expanded day contents
+Memoization: Wrap AccordionDay in React.memo() to prevent re-renders
+Transition Performance: Use CSS transforms instead of height changes (if possible) for smoother animations
+Touch Optimization: Debounce rapid taps to prevent double-submission
+
+Browser Support
+
+Chrome/Edge 90+ (latest 2 versions)
+Safari 14+ (iOS 14+)
+Firefox 88+
+Samsung Internet 14+
+
