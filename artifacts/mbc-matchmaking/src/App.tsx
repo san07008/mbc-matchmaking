@@ -1119,35 +1119,34 @@ function SurveyView() {
                     {selectedCount} selected
                   </span>
                 </button>
-                <div
-                  id={dayId}
-                  role="region"
-                  aria-hidden={!isOpen}
-                  className={`grid grid-cols-2 gap-2 p-4 transition-all duration-300 ease-in-out ${
-                    isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden !p-0'
-                  }`}
-                >
-                  {SURVEY_TIMES.map((time: string) => {
-                    const isSelected = availability[day]?.[time];
-                    return (
-                      <button
-                        key={time}
-                        onClick={() => toggleSlot(day, time)}
-                        className={`flex items-center justify-center space-x-2 rounded-lg font-bold text-sm transition-all min-h-[44px] ${
-                          isSelected
-                            ? 'bg-[#2D8A56] text-white shadow-sm'
-                            : 'bg-[#F5F4F0] text-[#6B6B6B] hover:bg-[#E8E4DF]'
-                        }`}
-                      >
-                        {isSelected
-                          ? <Check className="w-4 h-4" strokeWidth={3} />
-                          : <span className="text-[#A3A3A3]">—</span>
-                        }
-                        <span>{time}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                {isOpen && (
+                  <div
+                    id={dayId}
+                    role="region"
+                    className="grid grid-cols-2 gap-2 p-4 animate-accordion-open"
+                  >
+                    {SURVEY_TIMES.map((time: string) => {
+                      const isSelected = availability[day]?.[time];
+                      return (
+                        <button
+                          key={time}
+                          onClick={() => toggleSlot(day, time)}
+                          className={`flex items-center justify-center space-x-2 rounded-lg font-bold text-sm transition-all min-h-[44px] ${
+                            isSelected
+                              ? 'bg-[#2D8A56] text-white shadow-sm'
+                              : 'bg-[#F5F4F0] text-[#6B6B6B] hover:bg-[#E8E4DF]'
+                          }`}
+                        >
+                          {isSelected
+                            ? <Check className="w-4 h-4" strokeWidth={3} />
+                            : <span className="text-[#A3A3A3]">—</span>
+                          }
+                          <span>{time}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}
