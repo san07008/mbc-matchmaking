@@ -394,12 +394,12 @@ function LoginPage() {
 
   const faqItems = [
     { q: 'What is PreceptorLink?', a: 'PreceptorLink is a scheduling platform that connects preceptors with startups by streamlining the availability and meeting scheduling process.' },
-    { q: 'How do I submit my availability?', a: 'After logging in, select your cohort and choose "I am a Preceptor." You\'ll see a weekly grid of time slots — click on the times you\'re available, then click "Submit Availability." You can update your selections at any time.' },
+    { q: 'How do I register?', a: 'PreceptorLink is invite-only. Your Cohort Manager will send you a unique registration link. Click the link, create your account with an email and password, and you\'re all set.' },
+    { q: 'How do I submit my availability?', a: 'After logging in, select your cohort and choose "I am a Preceptor." You\'ll see a weekly grid of time slots — click on the times you\'re available, then click "Submit Availability."' },
     { q: 'Can I change my availability after submitting?', a: 'Yes. Log back in and go to the availability grid. Your previous selections will still be there. Update any slots and re-submit to save your changes.' },
-    { q: 'How will I know when my meeting is scheduled?', a: 'Once an admin assigns you to a meeting, you\'ll receive an email notification with the startup name, day, time, Zoom link, and a calendar invite (.ics file) you can add directly to your calendar.' },
-    { q: 'How do admins invite preceptors?', a: 'Admins can generate a unique invite link from the dashboard and share it via email or message. The platform can also send the invite directly via email if SMTP is configured.' },
-    { q: 'Can admins export the schedule?', a: 'Yes. The admin dashboard includes CSV export and a printable schedule view for all assignments.' },
-    { q: 'Who do I contact if I have issues?', a: 'Reach out to your program administrator. They manage the platform and can help with any account or scheduling questions.' },
+    { q: 'How will I know when I\'m assigned to a startup?', a: 'Once you\'re assigned to a meeting, you\'ll receive an email notification with the startup name, day, time, Zoom link, and a calendar invite (.ics file) you can add directly to your calendar.' },
+    { q: 'What if I can\'t make a scheduled meeting?', a: 'Contact your Cohort Manager as soon as possible so they can adjust the schedule or find a replacement.' },
+    { q: 'Who do I contact for help?', a: 'Reach out to your Cohort Manager. They manage the platform and can help with any account or scheduling questions.' },
   ];
 
   return (
